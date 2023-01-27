@@ -116,19 +116,31 @@ fn should_fail_new_when_elevation_too_low() {
 fn should_new_coordinates() {
     // Arrange
     // Act
-    let result = Coordinates::new(Latitude::new(77.3).unwrap(), Longitude::new(165.9).unwrap(), Elevation::new(1010.32).unwrap());
+    let result = Coordinates::new(
+        Latitude::new(77.3).unwrap(),
+        Longitude::new(165.9).unwrap(),
+        Elevation::new(1010.32).unwrap(),
+    );
     // Assert
-    assert_eq!(Latitude::new(77.3).unwrap(), result.latitude());
-    assert_eq!(Longitude::new(165.9).unwrap(), result.longitude());
-    assert_eq!(Elevation::new(1010.32).unwrap(), result.elevation());
+    assert_eq!(Latitude::new(77.3).unwrap(), result.latitude);
+    assert_eq!(Longitude::new(165.9).unwrap(), result.longitude);
+    assert_eq!(Elevation::new(1010.32).unwrap(), result.elevation);
 }
 
 #[test]
 fn should_print_coordinates() {
     // Arrange
     // Act
-    let result1 = Coordinates::new(Latitude::new(77.3).unwrap(), Longitude::new(165.9).unwrap(), Elevation::new(1010.32).unwrap());
-    let result2 = Coordinates::new(Latitude::new(-77.3).unwrap(), Longitude::new(-165.9).unwrap(), Elevation::new(1010.32).unwrap());
+    let result1 = Coordinates::new(
+        Latitude::new(77.3).unwrap(),
+        Longitude::new(165.9).unwrap(),
+        Elevation::new(1010.32).unwrap(),
+    );
+    let result2 = Coordinates::new(
+        Latitude::new(-77.3).unwrap(),
+        Longitude::new(-165.9).unwrap(),
+        Elevation::new(1010.32).unwrap(),
+    );
     // Assert
     assert_eq!("77 N, 166 E, 1010 meters", result1.to_string());
     assert_eq!("77 S, 166 W, 1010 meters", result2.to_string());

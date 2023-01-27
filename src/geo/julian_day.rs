@@ -89,7 +89,12 @@ mod tests {
         // Act
         let julian_day = JulianDay::new(date, Gmt::new(-4).unwrap());
         // Assert
-        assert_approx_eq!(f64, 2459917.66666667, julian_day.value, epsilon = EPSILON_TEST);
+        assert_approx_eq!(
+            f64,
+            2459917.66666667,
+            julian_day.value,
+            epsilon = EPSILON_TEST
+        );
         assert_eq!(date, julian_day.date);
     }
 
@@ -101,8 +106,16 @@ mod tests {
         // Act
         let prev_julian_day = julian_day.prev_day();
         // Assert
-        assert_approx_eq!(f64, 2459916.66666667, prev_julian_day.value, epsilon = EPSILON_TEST);
-        assert_eq!(NaiveDate::from_ymd_opt(2022, 12, 3).unwrap(), prev_julian_day.date);
+        assert_approx_eq!(
+            f64,
+            2459916.66666667,
+            prev_julian_day.value,
+            epsilon = EPSILON_TEST
+        );
+        assert_eq!(
+            NaiveDate::from_ymd_opt(2022, 12, 3).unwrap(),
+            prev_julian_day.date
+        );
     }
 
     #[test]
@@ -113,7 +126,15 @@ mod tests {
         // Act
         let new_julian_day = julian_day.next_day();
         // Assert
-        assert_approx_eq!(f64, 2459918.66666667, new_julian_day.value, epsilon = EPSILON_TEST);
-        assert_eq!(NaiveDate::from_ymd_opt(2022, 12, 5).unwrap(), new_julian_day.date);
+        assert_approx_eq!(
+            f64,
+            2459918.66666667,
+            new_julian_day.value,
+            epsilon = EPSILON_TEST
+        );
+        assert_eq!(
+            NaiveDate::from_ymd_opt(2022, 12, 5).unwrap(),
+            new_julian_day.date
+        );
     }
 }

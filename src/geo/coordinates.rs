@@ -1,78 +1,101 @@
 use std::fmt::Display;
 
+use crate::angle::Angle;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Direction {
     North,
     South,
     East,
-    West
+    West,
+}
+
+pub trait GeoAngle {
+    fn direction(&self) -> Direction;
+    fn angle(&self) -> Angle;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Latitude(f64);
+pub struct Latitude(Angle);
 
 impl Latitude {
-    pub fn new(value: f64) -> Result<Latitude, ()> {
-        if value > 90. || value < -90. {
+    pub fn new(degrees: f64) -> Result<Latitude, ()> {
+        if degrees > 90. || degrees < -90. {
             Err(())
         } else {
-            Ok(Latitude(value))
+            Ok(Latitude(Angle::from_degrees(degrees)))
+        }
+    }
+}
+
+impl GeoAngle for Latitude {
+    fn direction(&self) -> Direction {
+        if self.0.degrees() >= 0. {
+            Direction::North
+        } else {
+            Direction::South
         }
     }
 
-    pub fn direction(&self) -> Direction {
-        if self.0 >= 0. {
-            Direction::North
-        }
-        else {
-            Direction:: South
-        }
+    fn angle(&self) -> Angle {
+        self.0
     }
 }
 
 impl Display for Latitude {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {}", self.0.round().abs(), if self.direction() == Direction::North { "N" } else { "S"})
-    }
-}
-
-impl From<Latitude> for f64 {
-    fn from(value: Latitude) -> Self {
-        value.0
+        write!(
+            f,
+            "{} {}",
+            self.angle().degrees().round().abs(),
+            if self.direction() == Direction::North {
+                "N"
+            } else {
+                "S"
+            }
+        )
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Longitude(f64);
+pub struct Longitude(Angle);
 
 impl Longitude {
-    pub fn new(value: f64) -> Result<Longitude, ()> {
-        if value > 180. || value < -180. {
+    pub fn new(degrees: f64) -> Result<Longitude, ()> {
+        if degrees > 180. || degrees < -180. {
             Err(())
         } else {
-            Ok(Longitude(value))
+            Ok(Longitude(Angle::from_degrees(degrees)))
+        }
+    }
+}
+
+impl GeoAngle for Longitude {
+    fn direction(&self) -> Direction {
+        if self.0.degrees() >= 0. {
+            Direction::East
+        } else {
+            Direction::West
         }
     }
 
-    pub fn direction(&self) -> Direction {
-        if self.0 >= 0. {
-            Direction::East
-        }
-        else {
-            Direction:: West
-        }
+    fn angle(&self) -> Angle {
+        self.0
     }
 }
 
 impl Display for Longitude {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {}", self.0.round().abs(), if self.direction() == Direction::West { "W" } else { "E"})
-    }
-}
-
-impl From<Longitude> for f64 {
-    fn from(value: Longitude) -> Self {
-        value.0
+        write!(
+            f,
+            "{} {}",
+            self.angle().degrees().round().abs(),
+            if self.direction() == Direction::West {
+                "W"
+            } else {
+                "E"
+            }
+        )
     }
 }
 
@@ -106,9 +129,9 @@ impl Display for Elevation {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Coordinates {
-    latitude: Latitude,
-    longitude: Longitude,
-    elevation: Elevation,
+    pub latitude: Latitude,
+    pub longitude: Longitude,
+    pub elevation: Elevation,
 }
 
 impl Coordinates {
@@ -119,22 +142,14 @@ impl Coordinates {
             elevation,
         }
     }
-
-    pub fn latitude(&self) -> Latitude {
-        self.latitude
-    }
-
-    pub fn longitude(&self) -> Longitude {
-        self.longitude
-    }
-
-    pub fn elevation(&self) -> Elevation {
-        self.elevation
-    }
 }
 
 impl Display for Coordinates {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}, {}, {}", self.latitude, self.longitude, self.elevation)
+        write!(
+            f,
+            "{}, {}, {}",
+            self.latitude, self.longitude, self.elevation
+        )
     }
 }

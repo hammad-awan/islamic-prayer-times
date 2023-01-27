@@ -1,6 +1,9 @@
-use crate::angle_math::AngleMath;
+use crate::angle::{Angle, LimitAngle};
 
-use super::{julian_day::JulianDay, coordinates::Coordinates};
+use super::{
+    coordinates::{Coordinates, GeoAngle},
+    julian_day::JulianDay,
+};
 
 static TEN_POW_EIGHT: f64 = 10_i32.pow(8) as f64;
 
@@ -358,16 +361,15 @@ const SIN_COEFFICIENT: [(i8, i8, i8, i8, i8); 63] = [
     (2, -1, -1, 2, 2),
     (0, 0, 3, 2, 2),
     (2, -1, 0, 2, 2),
-];    
+];
 
 #[derive(Debug, Clone, Copy)]
-pub struct Astro
-{
-    dra: f64,
-    dec: f64,
-    ra: f64,
+pub struct Astro {
+    dra: Angle,
+    dec: Angle,
+    ra: Angle,
     rsum: f64,
-    sid_time: f64,
+    sid_time: Angle,
 }
 
 impl Astro {
@@ -404,8 +406,14 @@ impl Astro {
         let u = jm / 10.;
         let us = Astro::pow_series(u, 10);
 
-        let e = 84381.448 - 4680.93 * us[0] - 1.55 * us[1] + 1999.25 * us[2] - 51.38 * us[3] - 249.67 * us[4] -
-                 39.05 * us[5] + 7.12 * us[6] + 27.87 * us[7] + 5.79 * us[8] + 2.45 * us[9];
+        let e = 84381.448 - 4680.93 * us[0] - 1.55 * us[1] + 1999.25 * us[2]
+            - 51.38 * us[3]
+            - 249.67 * us[4]
+            - 39.05 * us[5]
+            + 7.12 * us[6]
+            + 27.87 * us[7]
+            + 5.79 * us[8]
+            + 2.45 * us[9];
         let e = e / 3600. + delta_eps;
         let e = e.to_radians();
         let e_cos = e.cos();
@@ -426,31 +434,47 @@ impl Astro {
         let sid_time = v0.cap_angle_360() + delta_psi * e_cos;
 
         Astro {
-            dec,
-            ra,
-            sid_time,
+            dec: Angle::from_degrees(dec),
+            ra: Angle::from_degrees(ra),
+            sid_time: Angle::from_degrees(sid_time),
             rsum,
-            dra: 0.,
+            dra: Angle::from_radians(0.),
         }
     }
-    
+
     fn calc_total(elems: &[(f64, f64, f64)], jm: f64) -> f64 {
-        elems.iter().fold(0., |acc, (i0, i1, i2)|acc + *i0 * (*i1 + *i2 * jm).cos())
+        elems
+            .iter()
+            .fold(0., |acc, (i0, i1, i2)| acc + *i0 * (*i1 + *i2 * jm).cos())
     }
 
     fn calc_sum(elems: &[&[(f64, f64, f64)]], jms: &[f64]) -> f64 {
-        elems.iter().enumerate().fold(0., |acc, (idx, xi)|acc + Astro::calc_total(*xi, jms[1]) * jms[idx]) / TEN_POW_EIGHT
+        elems.iter().enumerate().fold(0., |acc, (idx, xi)| {
+            acc + Astro::calc_total(*xi, jms[1]) * jms[idx]
+        }) / TEN_POW_EIGHT
     }
 
     fn calc_psi_epsilon(elems: &[f64; 5], jc: f64) -> (f64, f64) {
-        SIN_COEFFICIENT.iter().enumerate().fold((0., 0.), |acc, (idx, (sc0, sc1, sc2, sc3, sc4))|{
-            let scs = [*sc0 as f64, *sc1 as f64, *sc2 as f64, *sc3 as f64, *sc4 as f64];
-            let xi_sum = elems.iter().enumerate().fold(0., |acc, (idx, xi)|acc + *xi * scs[idx]);
-            let xi_sum_rads = xi_sum.to_radians();
-            let psi = acc.0 + PE[idx].0 + jc * PE[idx].1 * xi_sum_rads.sin();
-            let epsilon = acc.1 + PE[idx].2 + jc * PE[idx].3 * xi_sum_rads.cos();
-            (psi, epsilon)
-        })
+        SIN_COEFFICIENT.iter().enumerate().fold(
+            (0., 0.),
+            |acc, (idx, (sc0, sc1, sc2, sc3, sc4))| {
+                let scs = [
+                    *sc0 as f64,
+                    *sc1 as f64,
+                    *sc2 as f64,
+                    *sc3 as f64,
+                    *sc4 as f64,
+                ];
+                let xi_sum = elems
+                    .iter()
+                    .enumerate()
+                    .fold(0., |acc, (idx, xi)| acc + *xi * scs[idx]);
+                let xi_sum_rads = xi_sum.to_radians();
+                let psi = acc.0 + PE[idx].0 + jc * PE[idx].1 * xi_sum_rads.sin();
+                let epsilon = acc.1 + PE[idx].2 + jc * PE[idx].3 * xi_sum_rads.cos();
+                (psi, epsilon)
+            },
+        )
     }
 
     fn pow_series(val: f64, count: usize) -> Vec<f64> {
@@ -483,7 +507,6 @@ impl AstroDay {
     pub fn julian_day(&self) -> JulianDay {
         self.julian_day
     }
-
 }
 
 pub struct TopAstroDay {
@@ -499,26 +522,28 @@ impl TopAstroDay {
         for astro in astro_day.astros.iter() {
             let j = 0.99664719;
             let k = 6378140.;
-            let lhour = (astro.sid_time + f64::from(coords.longitude()) - astro.ra).cap_angle_360().to_radians();
+            let lhour = (astro.sid_time + coords.longitude.angle() - astro.ra)
+                .cap_angle_360()
+                .radians();
             let lhour_cos = lhour.cos();
             let sp = (8.794 / (3600. * astro.rsum)).to_radians();
             let sp_sin = sp.sin();
-            let elev = f64::from(coords.elevation());
-            let lat_rads = f64::from(coords.latitude()).to_radians();
-            let tu = (j * lat_rads.tan()).atan();
-            let tcos = tu.cos() + elev / k * lat_rads.cos();
-            let tsin = j * tu.sin() + elev / k * lat_rads.sin();
-            let dec_cos = astro.dec.cos();
+            let elev = f64::from(coords.elevation);
+            let tu = (j * coords.latitude.angle().tan()).atan();
+            let tcos = tu.cos() + elev / k * coords.latitude.angle().cos();
+            let tsin = j * tu.sin() + elev / k * coords.latitude.angle().sin();
+            let dec_cos = astro.dec.degrees().cos();
             let dra = -tcos * sp_sin * lhour.sin() / (dec_cos - tcos * sp_sin * lhour_cos);
-            let dec = (astro.dec.sin() - tsin * sp_sin) * dra.cos();
-            let dec = dec.atan2(dec_cos - tcos * sp_sin * lhour_cos).to_degrees();
+            let dec = (astro.dec.degrees().sin() - tsin * sp_sin) * dra.cos();
+            let dec = dec.atan2(dec_cos - tcos * sp_sin * lhour_cos);
+            let dra = Angle::from_radians(dra);
 
             let top_astro = Astro {
-                ra: astro.ra + dra.to_degrees(),
+                ra: astro.ra + dra,
                 sid_time: astro.sid_time,
-                dra,
+                dra: dra,
                 rsum: astro.rsum,
-                dec
+                dec: Angle::from_radians(dec),
             };
 
             astros.push(top_astro);
@@ -537,7 +562,7 @@ mod tests {
     use chrono::NaiveDate;
     use float_cmp::assert_approx_eq;
 
-    use crate::geo::{julian_day::*, coordinates::*};
+    use crate::geo::{coordinates::*, julian_day::*};
 
     use super::*;
 
@@ -551,11 +576,26 @@ mod tests {
         // Act
         let astro = Astro::new(f64::from(julian_day));
         // Assert
-        assert_approx_eq!(f64, 307.28605197, astro.ra, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 0., astro.dra, epsilon = EPSILON_TEST);
+        assert_approx_eq!(
+            f64,
+            307.28605197,
+            astro.ra.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(f64, 0., astro.dra.radians(), epsilon = EPSILON_TEST);
         assert_approx_eq!(f64, 0.98446346, astro.rsum, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, -0.33216269, astro.dec, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 199.24752575, astro.sid_time, epsilon = EPSILON_TEST);
+        assert_approx_eq!(
+            f64,
+            -0.33216269,
+            astro.dec.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            199.24752575,
+            astro.sid_time.degrees(),
+            epsilon = EPSILON_TEST
+        );
     }
 
     #[test]
@@ -568,50 +608,204 @@ mod tests {
         // Assert
         assert_eq!(3, astro_day.astros.len());
         assert_eq!(julian_day, astro_day.julian_day);
-        assert_approx_eq!(f64, 306.24007524, astro_day.astros[0].ra, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 0., astro_day.astros[0].dra, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 0.98436500, astro_day.astros[0].rsum, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, -0.33639010, astro_day.astros[0].dec, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 198.26187838, astro_day.astros[0].sid_time, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 307.28605197, astro_day.astros[1].ra, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 0., astro_day.astros[1].dra, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 0.98446346, astro_day.astros[1].rsum, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, -0.33216269, astro_day.astros[1].dec, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 199.24752575, astro_day.astros[1].sid_time, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 308.32865839, astro_day.astros[2].ra, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 0., astro_day.astros[2].dra, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 0.98456559, astro_day.astros[2].rsum, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, -0.32783394, astro_day.astros[2].dec, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 200.23317312, astro_day.astros[2].sid_time, epsilon = EPSILON_TEST);
+        assert_approx_eq!(
+            f64,
+            306.24007524,
+            astro_day.astros[0].ra.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            0.,
+            astro_day.astros[0].dra.radians(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            0.98436500,
+            astro_day.astros[0].rsum,
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            -0.33639010,
+            astro_day.astros[0].dec.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            198.26187838,
+            astro_day.astros[0].sid_time.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            307.28605197,
+            astro_day.astros[1].ra.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            0.,
+            astro_day.astros[1].dra.radians(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            0.98446346,
+            astro_day.astros[1].rsum,
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            -0.33216269,
+            astro_day.astros[1].dec.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            199.24752575,
+            astro_day.astros[1].sid_time.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            308.32865839,
+            astro_day.astros[2].ra.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            0.,
+            astro_day.astros[2].dra.radians(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            0.98456559,
+            astro_day.astros[2].rsum,
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            -0.32783394,
+            astro_day.astros[2].dec.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            200.23317312,
+            astro_day.astros[2].sid_time.degrees(),
+            epsilon = EPSILON_TEST
+        );
     }
 
     #[test]
-    fn should_new_top_astro_day(){
+    fn should_new_top_astro_day() {
         // Arrange
         let date = NaiveDate::from_ymd_opt(2023, 1, 25).unwrap();
         let julian_day = JulianDay::new(date, Gmt::new(-5).unwrap());
         let astro_day = AstroDay::new(julian_day);
-        let coords = Coordinates::new(Latitude::new(39.0181651).unwrap(), Longitude::new(-77.2085914).unwrap(), Elevation::new(0.).unwrap());
+        let coords = Coordinates::new(
+            Latitude::new(39.0181651).unwrap(),
+            Longitude::new(-77.2085914).unwrap(),
+            Elevation::new(0.).unwrap(),
+        );
         // Act
         let top_astro_day = TopAstroDay::new(astro_day, coords);
         // Assert
         assert_eq!(3, top_astro_day.astros.len());
         assert_eq!(coords, top_astro_day.coords);
         assert_eq!(julian_day, top_astro_day.astro_day.julian_day);
-        assert_approx_eq!(f64, 306.23989035, top_astro_day.astros[0].ra, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, -3.22693472e-6, top_astro_day.astros[0].dra, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 0.98436500, top_astro_day.astros[0].rsum, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, -19.27456501, top_astro_day.astros[0].dec, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 198.26187838, top_astro_day.astros[0].sid_time, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 307.28586523, top_astro_day.astros[1].ra, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, -3.259248858e-6, top_astro_day.astros[1].dra, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 0.98446346, top_astro_day.astros[1].rsum, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, -19.03236237, top_astro_day.astros[1].dec, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 199.24752575, top_astro_day.astros[1].sid_time, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 308.32846992, top_astro_day.astros[2].ra, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, -3.28930619e-6, top_astro_day.astros[2].dra, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 0.98456559, top_astro_day.astros[2].rsum, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, -18.78435333, top_astro_day.astros[2].dec, epsilon = EPSILON_TEST);
-        assert_approx_eq!(f64, 200.23317312, top_astro_day.astros[2].sid_time, epsilon = EPSILON_TEST);
+        assert_approx_eq!(
+            f64,
+            306.23989035,
+            top_astro_day.astros[0].ra.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            -3.22693472e-6,
+            top_astro_day.astros[0].dra.radians(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            0.98436500,
+            top_astro_day.astros[0].rsum,
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            -19.27456501,
+            top_astro_day.astros[0].dec.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            198.26187838,
+            top_astro_day.astros[0].sid_time.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            307.28586523,
+            top_astro_day.astros[1].ra.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            -3.259248858e-6,
+            top_astro_day.astros[1].dra.radians(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            0.98446346,
+            top_astro_day.astros[1].rsum,
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            -19.03236237,
+            top_astro_day.astros[1].dec.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            199.24752575,
+            top_astro_day.astros[1].sid_time.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            308.32846992,
+            top_astro_day.astros[2].ra.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            -3.28930619e-6,
+            top_astro_day.astros[2].dra.radians(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            0.98456559,
+            top_astro_day.astros[2].rsum,
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            -18.78435333,
+            top_astro_day.astros[2].dec.degrees(),
+            epsilon = EPSILON_TEST
+        );
+        assert_approx_eq!(
+            f64,
+            200.23317312,
+            top_astro_day.astros[2].sid_time.degrees(),
+            epsilon = EPSILON_TEST
+        );
     }
 }
