@@ -23,7 +23,7 @@ pub struct JulianDay {
 }
 
 impl JulianDay {
-    pub fn new(date: NaiveDate, gmt: Gmt) -> JulianDay {
+    pub fn new(date: NaiveDate, gmt: Gmt) -> Self {
         let mut new_year = date.year() as f64;
         let mut new_month = date.month() as f64;
         if new_month <= 2. {
@@ -47,18 +47,18 @@ impl JulianDay {
         let d = (30.6001 * (new_month + 1.)).floor();
         let value = b + c + d + (date.day() as f64 - gmt.0 as f64 / 24.) - 1524.5;
 
-        JulianDay { date, gmt, value }
+        Self { date, gmt, value }
     }
 
-    pub fn prev_day(&self) -> JulianDay {
-        JulianDay {
+    pub fn prev_day(&self) -> Self {
+        Self {
             date: self.date.sub(Days::new(1)),
             gmt: self.gmt,
             value: self.value - 1.,
         }
     }
 
-    pub fn next_day(&self) -> JulianDay {
+    pub fn next_day(&self) -> Self {
         JulianDay {
             date: self.date.add(Days::new(1)),
             gmt: self.gmt,

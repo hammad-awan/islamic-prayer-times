@@ -365,15 +365,15 @@ const SIN_COEFFICIENT: [(i8, i8, i8, i8, i8); 63] = [
 
 #[derive(Debug, Clone, Copy)]
 pub struct Astro {
-    dra: Angle,
-    dec: Angle,
-    ra: Angle,
-    rsum: f64,
-    sid_time: Angle,
+    pub dra: Angle,
+    pub dec: Angle,
+    pub ra: Angle,
+    pub rsum: f64,
+    pub sid_time: Angle,
 }
 
 impl Astro {
-    fn new(julian_day: f64) -> Astro {
+    fn new(julian_day: f64) -> Self {
         let j = julian_day - 2451545.;
         let jc = j / 36525.;
         let jm = jc / 10.;
@@ -433,7 +433,7 @@ impl Astro {
         let v0 = 280.46061837 + 360.98564736629 * j + 0.000387933 * jc2 - jc3 / 38710000.;
         let sid_time = v0.cap_angle_360() + delta_psi * e_cos;
 
-        Astro {
+        Self {
             dec: Angle::from_degrees(dec),
             ra: Angle::from_degrees(ra),
             sid_time: Angle::from_degrees(sid_time),
@@ -494,14 +494,26 @@ pub struct AstroDay {
 }
 
 impl AstroDay {
-    pub fn new(julian_day: JulianDay) -> AstroDay {
+    pub fn new(julian_day: JulianDay) -> Self {
         let jd_val = f64::from(julian_day);
         let mut astros = Vec::new();
         astros.push(Astro::new(jd_val - 1.));
         astros.push(Astro::new(jd_val));
         astros.push(Astro::new(jd_val + 1.));
 
-        AstroDay { astros, julian_day }
+        Self { astros, julian_day }
+    }
+
+    pub fn astro(&self) -> &Astro {
+        &self.astros[1]
+    }
+
+    pub fn prev_astro(&self) -> &Astro {
+        &self.astros[0]
+    }
+
+    pub fn next_astro(&self) -> &Astro {
+        &self.astros[2]
     }
 
     pub fn julian_day(&self) -> JulianDay {
@@ -516,7 +528,7 @@ pub struct TopAstroDay {
 }
 
 impl TopAstroDay {
-    pub fn new(astro_day: AstroDay, coords: Coordinates) -> TopAstroDay {
+    pub fn new(astro_day: AstroDay, coords: Coordinates) -> Self {
         let mut astros = Vec::new();
 
         for astro in astro_day.astros.iter() {
@@ -549,7 +561,7 @@ impl TopAstroDay {
             astros.push(top_astro);
         }
 
-        TopAstroDay {
+        Self {
             astro_day,
             coords,
             astros,

@@ -10,9 +10,9 @@ pub struct Angle {
 }
 
 impl Angle {
-    pub fn from_degrees(degrees: f64) -> Angle {
+    pub fn from_degrees(degrees: f64) -> Self {
         let radians = degrees.to_radians();
-        Angle {
+        Self {
             degrees,
             radians,
             cos: radians.cos(),
@@ -21,8 +21,8 @@ impl Angle {
         }
     }
 
-    pub fn from_radians(radians: f64) -> Angle {
-        Angle {
+    pub fn from_radians(radians: f64) -> Self {
+        Self {
             radians,
             degrees: radians.to_degrees(),
             cos: radians.cos(),

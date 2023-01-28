@@ -28,12 +28,12 @@ impl Qibla {
     const KAABA_LATITUDE: f64 = 21.423333;
     const KAABA_LONGITUDE: f64 = 39.823333;
 
-    pub fn new(coords: Coordinates) -> Qibla {
+    pub fn new(coords: Coordinates) -> Self {
         let x = coords.longitude.angle().radians() - Qibla::KAABA_LONGITUDE.to_radians();
         let y = coords.latitude.angle().cos() * Qibla::KAABA_LATITUDE.to_radians().tan()
             - coords.latitude.angle().sin() * x.cos();
         let angle = x.sin().atan2(y).to_degrees();
-        Qibla { coords, angle }
+        Self { coords, angle }
     }
 
     pub fn coords(&self) -> Coordinates {

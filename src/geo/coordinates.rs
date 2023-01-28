@@ -19,11 +19,11 @@ pub trait GeoAngle {
 pub struct Latitude(Angle);
 
 impl Latitude {
-    pub fn new(degrees: f64) -> Result<Latitude, ()> {
+    pub fn new(degrees: f64) -> Result<Self, ()> {
         if degrees > 90. || degrees < -90. {
             Err(())
         } else {
-            Ok(Latitude(Angle::from_degrees(degrees)))
+            Ok(Self(Angle::from_degrees(degrees)))
         }
     }
 }
@@ -61,11 +61,11 @@ impl Display for Latitude {
 pub struct Longitude(Angle);
 
 impl Longitude {
-    pub fn new(degrees: f64) -> Result<Longitude, ()> {
+    pub fn new(degrees: f64) -> Result<Self, ()> {
         if degrees > 180. || degrees < -180. {
             Err(())
         } else {
-            Ok(Longitude(Angle::from_degrees(degrees)))
+            Ok(Self(Angle::from_degrees(degrees)))
         }
     }
 }
@@ -106,11 +106,11 @@ impl Elevation {
     pub const MAX: f64 = 8848.;
     pub const MIN: f64 = -420.;
 
-    pub fn new(value: f64) -> Result<Elevation, ()> {
+    pub fn new(value: f64) -> Result<Self, ()> {
         if value > Elevation::MAX || value < Elevation::MIN {
             Err(())
         } else {
-            Ok(Elevation(value))
+            Ok(Self(value))
         }
     }
 }
@@ -135,8 +135,8 @@ pub struct Coordinates {
 }
 
 impl Coordinates {
-    pub fn new(latitude: Latitude, longitude: Longitude, elevation: Elevation) -> Coordinates {
-        Coordinates {
+    pub fn new(latitude: Latitude, longitude: Longitude, elevation: Elevation) -> Self {
+        Self {
             latitude,
             longitude,
             elevation,
