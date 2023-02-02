@@ -1,4 +1,4 @@
 mod angle;
-mod prayer;
 
 pub mod geo;
+pub mod prayer_times;

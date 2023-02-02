@@ -2,16 +2,7 @@ use std::collections::HashMap;
 
 use crate::{angle::Angle, geo::coordinates::Latitude};
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub enum Prayer {
-    Fajr,
-    Shurooq,
-    Dhuhr,
-    Asr,
-    Maghrib,
-    Isha,
-    Imsaak,
-}
+use super::{ext_lat::ExtremeLatitudeMethod, Prayer};
 
 pub enum Method {
     Egyptian,
@@ -23,6 +14,7 @@ pub enum Method {
     FixedIsha,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RoundSecondsMethod {
     NoRounding,
     NormalRounding,
@@ -30,36 +22,21 @@ pub enum RoundSecondsMethod {
     AggressiveRounding,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum AsrShadowRatioMethod {
     Shafi = 1,
     Hanafi,
 }
 
-pub enum ExtremeLatitudeMethod {
-    NearestLatitudeAllPrayersAlways,
-    NearestLatitudeFajrIshaAlways,
-    NearestLatitudeFajrIshaInvalid,
-    NearestGoodDayAllPrayersAlways,
-    NearestGoodDayFajrIshaInvalid,
-    SeventhOfNightFajrIshaAlways,
-    SeventhOfNightFajrIshaInvalid,
-    SeventhOfDayFajrIshaAlways,
-    SeventhOfDayFajrIshaInvalid,
-    HalfOfNightFajrIshaAlways,
-    HalfOfNightFajrIshaInvalid,
-    MinutesFromMaghribFajrIshaAlways,
-    MinutesFromMaghribFajrIshaInvalid,
-}
-
 pub struct Params {
-    method: Method,
-    nearest_latitude: Latitude,
-    round_seconds: RoundSecondsMethod,
-    asr_shadow_ratio: AsrShadowRatioMethod,
-    extreme_latitude: ExtremeLatitudeMethod,
-    angles: HashMap<Prayer, Angle>,
-    intervals: HashMap<Prayer, Angle>,
-    minute_offsets: HashMap<Prayer, f64>,
+    pub method: Method,
+    pub nearest_latitude: Latitude,
+    pub round_seconds: RoundSecondsMethod,
+    pub asr_shadow_ratio: AsrShadowRatioMethod,
+    pub extreme_latitude: ExtremeLatitudeMethod,
+    pub angles: HashMap<Prayer, Angle>,
+    pub intervals: HashMap<Prayer, Angle>,
+    pub minute_offsets: HashMap<Prayer, f64>,
 }
 
 impl Params {
@@ -141,5 +118,52 @@ impl Params {
 impl Default for Params {
     fn default() -> Self {
         Self::new(Method::Isna)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Pressure(f64);
+
+impl Pressure {
+    pub fn new(pressure: f64) -> Result<Self, ()> {
+        // TODO: Add invariant.
+        Ok(Self(pressure))
+    }
+}
+
+impl From<Pressure> for f64 {
+    fn from(value: Pressure) -> Self {
+        value.0
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Temperature(f64);
+
+impl Temperature {
+    pub fn new(temperature: f64) -> Result<Self, ()> {
+        // TODO: Add invariant.
+        Ok(Self(temperature))
+    }
+}
+
+impl From<Temperature> for f64 {
+    fn from(value: Temperature) -> Self {
+        value.0
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Weather {
+    pub pressure: Pressure,
+    pub temperature: Temperature,
+}
+
+impl Default for Weather {
+    fn default() -> Self {
+        Self {
+            pressure: Pressure::new(1010.).unwrap(),
+            temperature: Temperature::new(10.).unwrap(),
+        }
     }
 }

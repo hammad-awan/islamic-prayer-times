@@ -488,6 +488,7 @@ impl Astro {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct AstroDay {
     astros: Vec<Astro>,
     julian_day: JulianDay,
@@ -503,27 +504,12 @@ impl AstroDay {
 
         Self { astros, julian_day }
     }
-
-    pub fn astro(&self) -> &Astro {
-        &self.astros[1]
-    }
-
-    pub fn prev_astro(&self) -> &Astro {
-        &self.astros[0]
-    }
-
-    pub fn next_astro(&self) -> &Astro {
-        &self.astros[2]
-    }
-
-    pub fn julian_day(&self) -> JulianDay {
-        self.julian_day
-    }
 }
 
+#[derive(Debug, Clone)]
 pub struct TopAstroDay {
     astro_day: AstroDay,
-    coords: Coordinates,
+    pub coords: Coordinates,
     astros: Vec<Astro>,
 }
 
@@ -566,6 +552,26 @@ impl TopAstroDay {
             coords,
             astros,
         }
+    }
+
+    pub fn new_coords(&self, coords: Coordinates) -> Self {
+        Self::new(self.astro_day.clone(), coords)
+    }
+
+    pub fn astro(&self) -> &Astro {
+        &self.astros[1]
+    }
+
+    pub fn prev_astro(&self) -> &Astro {
+        &self.astros[0]
+    }
+
+    pub fn next_astro(&self) -> &Astro {
+        &self.astros[2]
+    }
+
+    pub fn julian_day(&self) -> JulianDay {
+        self.astro_day.julian_day
     }
 }
 

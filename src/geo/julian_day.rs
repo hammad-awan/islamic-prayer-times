@@ -17,9 +17,9 @@ impl Gmt {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct JulianDay {
-    date: NaiveDate,
-    gmt: Gmt,
-    value: f64,
+    pub date: NaiveDate,
+    pub gmt: Gmt,
+    pub value: f64,
 }
 
 impl JulianDay {
@@ -50,19 +50,19 @@ impl JulianDay {
         Self { date, gmt, value }
     }
 
-    pub fn prev_day(&self) -> Self {
+    pub fn sub(&self, days: u64) -> Self {
         Self {
-            date: self.date.sub(Days::new(1)),
+            date: self.date.sub(Days::new(days)),
             gmt: self.gmt,
-            value: self.value - 1.,
+            value: self.value - days as f64,
         }
     }
 
-    pub fn next_day(&self) -> Self {
+    pub fn add(&self, days: u64) -> Self {
         JulianDay {
-            date: self.date.add(Days::new(1)),
+            date: self.date.add(Days::new(days)),
             gmt: self.gmt,
-            value: self.value + 1.,
+            value: self.value + days as f64,
         }
     }
 }
@@ -104,7 +104,7 @@ mod tests {
         let date = NaiveDate::from_ymd_opt(2022, 12, 4).unwrap();
         let julian_day = JulianDay::new(date, Gmt::new(-4).unwrap());
         // Act
-        let prev_julian_day = julian_day.prev_day();
+        let prev_julian_day = julian_day.sub(1);
         // Assert
         assert_approx_eq!(
             f64,
@@ -124,7 +124,7 @@ mod tests {
         let date = NaiveDate::from_ymd_opt(2022, 12, 4).unwrap();
         let julian_day = JulianDay::new(date, Gmt::new(-4).unwrap());
         // Act
-        let new_julian_day = julian_day.next_day();
+        let new_julian_day = julian_day.add(1);
         // Assert
         assert_approx_eq!(
             f64,
