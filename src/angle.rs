@@ -1,33 +1,21 @@
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Angle {
     degrees: f64,
     radians: f64,
-    cos: f64,
-    sin: f64,
-    tan: f64,
 }
 
 impl Angle {
     pub fn from_degrees(degrees: f64) -> Self {
         let radians = degrees.to_radians();
-        Self {
-            degrees,
-            radians,
-            cos: radians.cos(),
-            sin: radians.sin(),
-            tan: radians.tan(),
-        }
+        Self { degrees, radians }
     }
 
     pub fn from_radians(radians: f64) -> Self {
         Self {
             radians,
             degrees: radians.to_degrees(),
-            cos: radians.cos(),
-            sin: radians.sin(),
-            tan: radians.tan(),
         }
     }
 
@@ -40,15 +28,21 @@ impl Angle {
     }
 
     pub fn cos(&self) -> f64 {
-        self.cos
+        self.radians.cos()
     }
 
     pub fn sin(&self) -> f64 {
-        self.sin
+        self.radians.sin()
     }
 
     pub fn tan(&self) -> f64 {
-        self.tan
+        self.radians.tan()
+    }
+}
+
+impl From<f64> for Angle {
+    fn from(value: f64) -> Self {
+        Angle::from_degrees(value)
     }
 }
 
@@ -84,6 +78,14 @@ impl Div for Angle {
     }
 }
 
+impl Neg for Angle {
+    type Output = Angle;
+
+    fn neg(self) -> Self::Output {
+        Angle::from_degrees(-self.degrees)
+    }
+}
+
 impl PartialOrd for Angle {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         match self.degrees.partial_cmp(&other.degrees) {
@@ -91,12 +93,6 @@ impl PartialOrd for Angle {
             ord => return ord,
         }
         self.radians.partial_cmp(&other.radians)
-    }
-}
-
-impl From<f64> for Angle {
-    fn from(value: f64) -> Self {
-        Angle::from_degrees(value)
     }
 }
 

@@ -2,6 +2,25 @@ use std::fmt::Display;
 
 use crate::angle::Angle;
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Gmt(f64);
+
+impl Gmt {
+    pub fn new(gmt: f64) -> Result<Gmt, ()> {
+        if gmt < -12. || gmt > 12. {
+            return Err(());
+        }
+
+        Ok(Gmt(gmt))
+    }
+}
+
+impl From<Gmt> for f64 {
+    fn from(value: Gmt) -> Self {
+        value.0
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Direction {
     North,

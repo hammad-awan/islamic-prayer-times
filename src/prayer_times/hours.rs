@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::Rem};
+use std::collections::HashMap;
 
 use chrono::NaiveTime;
 
@@ -14,7 +14,7 @@ use crate::{
 use super::{params::Weather, Prayer};
 
 const DEGREES_TO_10_BASE: f64 = 0.066666666666666666;
-const INVALID_TRIGGER: f64 = -0.999;
+const INVALID_TRIGGER: f64 = 1.;
 const REFRACTION_ALTITUDE: f64 = 0.0347;
 const CENTER_OF_SUN_ANGLE: f64 = -0.83337;
 const DEGREES_IN_CIRCLE: f64 = 360.;
@@ -29,10 +29,10 @@ pub fn get_hours(
 ) -> HashMap<Prayer, Result<f64, ()>> {
     use Prayer::*;
 
-    let (shur_result, dhuhr_hour, magh_result) =
+    let (shuhr_hour_res, dhuhr_hour, magh_hour_res) =
         get_shur_dhuhr_magh(top_astro_day.coords, top_astro_day, weather);
 
-    let (fajr_hour_result, isha_hour_result) = get_fajr_isha(
+    let (fajr_hour_res, isha_hour_res) = get_fajr_isha(
         top_astro_day.coords.latitude,
         top_astro_day.astro().dec,
         params.angles[&Fajr],
@@ -40,24 +40,25 @@ pub fn get_hours(
         dhuhr_hour,
     );
 
-    let asr_hour = get_asr(
+    let asr_hour_res = get_asr(
         top_astro_day.coords.latitude,
         top_astro_day.astro().dec,
         params.asr_shadow_ratio,
+        dhuhr_hour,
     );
 
     let mut hours = HashMap::new();
-    hours.insert(Fajr, fajr_hour_result);
-    hours.insert(Shurooq, shur_result);
+    hours.insert(Fajr, fajr_hour_res);
+    hours.insert(Shurooq, shuhr_hour_res);
     hours.insert(Dhuhr, Ok(dhuhr_hour));
-    hours.insert(Asr, Ok(asr_hour));
-    hours.insert(Maghrib, magh_result);
-    hours.insert(Isha, isha_hour_result);
+    hours.insert(Asr, asr_hour_res);
+    hours.insert(Maghrib, magh_hour_res);
+    hours.insert(Isha, isha_hour_res);
 
     hours
 }
 
-pub fn to_time(hour: f64, prayer: Prayer, params: &Params, dst: bool) -> Option<NaiveTime> {
+pub fn to_time(params: &Params, hour: f64, prayer: Prayer) -> NaiveTime {
     use Prayer::*;
     use RoundSecondsMethod::*;
 
@@ -89,12 +90,7 @@ pub fn to_time(hour: f64, prayer: Prayer, params: &Params, dst: bool) -> Option<
         _ => {}
     }
 
-    hour += if dst { 1. } else { 0. };
-    if hour >= 24. {
-        hour = hour.rem(24.)
-    }
-
-    NaiveTime::from_hms_opt(hour as u32, min as u32, sec as u32)
+    NaiveTime::from_hms_opt(hour as u32, min as u32, sec as u32).unwrap()
 }
 
 fn adj_time(hour: &mut f64, min: &mut f64, sec: &mut f64, sec_cap: f64) {
@@ -117,12 +113,12 @@ fn get_fajr_isha(
     let s = latitude.angle().sin() * dec.sin();
     let fajr_hour = (-fajr_angle.sin() - s) / c;
     let isha_hour = (-isha_angle.sin() - s) / c;
-    let fajr_hour = if fajr_hour <= INVALID_TRIGGER {
+    let fajr_hour = if fajr_hour < -INVALID_TRIGGER || fajr_hour > INVALID_TRIGGER {
         Err(())
     } else {
         Ok(dhuhr_hour - DEGREES_TO_10_BASE * fajr_hour.acos().to_degrees())
     };
-    let isha_hour = if isha_hour <= INVALID_TRIGGER {
+    let isha_hour = if isha_hour < -INVALID_TRIGGER || isha_hour > INVALID_TRIGGER {
         Err(())
     } else {
         Ok(DEGREES_TO_10_BASE * isha_hour.acos().to_degrees() + dhuhr_hour)
@@ -131,22 +127,23 @@ fn get_fajr_isha(
     (fajr_hour, isha_hour)
 }
 
-fn get_asr(latitude: Latitude, dec: Angle, madhab: AsrShadowRatioMethod) -> f64 {
+fn get_asr(
+    latitude: Latitude,
+    dec: Angle,
+    madhab: AsrShadowRatioMethod,
+    dhuhr_hour: f64,
+) -> Result<f64, ()> {
     let madhab = madhab as u8 as f64;
-    let k = (latitude.angle() - dec).tan();
-    let mut asr_hour = madhab + k;
-    if asr_hour < 1.0 || latitude.angle().degrees() < 0. {
-        asr_hour = madhab - k;
+    let mut asr_hour = (latitude.angle() - dec).radians();
+    asr_hour = madhab + asr_hour.abs().tan();
+    asr_hour = (1. / asr_hour).atan();
+    asr_hour = asr_hour.sin() - latitude.angle().sin() * dec.sin();
+    asr_hour = asr_hour / (latitude.angle().cos() * dec.cos());
+    if asr_hour < -INVALID_TRIGGER || asr_hour > INVALID_TRIGGER {
+        Err(())
+    } else {
+        Ok(DEGREES_TO_10_BASE * asr_hour.acos().to_degrees() + dhuhr_hour)
     }
-    let asr_hour = 1.5707963267948966 - asr_hour.atan();
-    let asr_hour = asr_hour.sin() - latitude.angle().sin() * dec.sin();
-    let asr_hour = asr_hour / (latitude.angle().cos() * dec.cos());
-    let mut asr_hour = asr_hour.acos();
-    if f64::is_nan(asr_hour) {
-        asr_hour = 0.;
-    }
-    let asr_hour = DEGREES_TO_10_BASE * asr_hour.to_degrees();
-    asr_hour
 }
 
 fn get_ra_deltas(top_astro_day: &TopAstroDay) -> (f64, f64) {

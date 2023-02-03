@@ -18,7 +18,7 @@ use super::{
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ExtremeLatitudeMethod {
-    None,
+    Nil,
     NearestLatitudeAllPrayersAlways,
     NearestLatitudeFajrIshaAlways,
     NearestLatitudeFajrIshaInvalid,
@@ -36,8 +36,8 @@ pub enum ExtremeLatitudeMethod {
 
 #[derive(Debug, Clone, Copy)]
 pub struct PrayerHour {
-    value: f64,
-    extreme: bool,
+    pub value: f64,
+    pub extreme: bool,
 }
 
 impl PrayerHour {
@@ -56,7 +56,7 @@ impl PrayerHour {
     }
 }
 
-fn adj_for_ext_lat(
+pub fn adj_for_ext_lat(
     hours: HashMap<Prayer, Result<f64, ()>>,
     params: &Params,
     top_astro_day: &TopAstroDay,
@@ -151,9 +151,8 @@ fn adj_near_lat(
         *hours[&Shurooq].borrow_mut() =
             adj_hours[&Shurooq].map(|hour| PrayerHour::new_extreme(hour));
         hours[&Dhuhr].borrow_mut().as_mut().unwrap().extreme = true;
-        *hours[&Asr].borrow_mut() = Ok(PrayerHour::new_extreme(
-            dhuhr_hour + adj_hours[&Asr].unwrap(),
-        ));
+        *hours[&Asr].borrow_mut() =
+            adj_hours[&Asr].map(|hour| PrayerHour::new_extreme(dhuhr_hour + hour));
         *hours[&Maghrib].borrow_mut() =
             adj_hours[&Maghrib].map(|hour| PrayerHour::new_extreme(hour));
     }
@@ -323,8 +322,7 @@ fn test_fajr_isha(
 ) -> Option<HashMap<Prayer, Result<f64, ()>>> {
     use Prayer::*;
 
-    let astro_day = AstroDay::new(julian_day);
-    let top_astro_day = TopAstroDay::new(astro_day, coords);
+    let top_astro_day = TopAstroDay::from_jd(julian_day, coords);
     let hours = get_hours(params, &top_astro_day, weather);
     if hours[&Fajr].is_ok() && hours[&Isha].is_ok() {
         Some(hours)
@@ -339,7 +337,7 @@ fn can_adj(
 ) -> bool {
     use ExtremeLatitudeMethod::*;
 
-    ext_lat_meth != None && (has_inv_hours(prayer_hours) || is_always_ext_lat(ext_lat_meth))
+    ext_lat_meth != Nil && (has_inv_hours(prayer_hours) || is_always_ext_lat(ext_lat_meth))
 }
 
 fn has_inv_hours(prayer_hours: &HashMap<Prayer, Result<f64, ()>>) -> bool {

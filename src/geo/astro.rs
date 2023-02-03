@@ -478,7 +478,8 @@ impl Astro {
     }
 
     fn pow_series(val: f64, count: usize) -> Vec<f64> {
-        let mut v = vec![val];
+        let mut v = Vec::with_capacity(count);
+        v.push(val);
         let mut curr = val;
         for _ in 1..count {
             curr *= val;
@@ -514,7 +515,11 @@ pub struct TopAstroDay {
 }
 
 impl TopAstroDay {
-    pub fn new(astro_day: AstroDay, coords: Coordinates) -> Self {
+    pub fn from_jd(julian_day: JulianDay, coords: Coordinates) -> Self {
+        Self::from_ad(AstroDay::new(julian_day), coords)
+    }
+
+    fn from_ad(astro_day: AstroDay, coords: Coordinates) -> Self {
         let mut astros = Vec::new();
 
         for astro in astro_day.astros.iter() {
@@ -555,7 +560,7 @@ impl TopAstroDay {
     }
 
     pub fn new_coords(&self, coords: Coordinates) -> Self {
-        Self::new(self.astro_day.clone(), coords)
+        Self::from_ad(self.astro_day.clone(), coords)
     }
 
     pub fn astro(&self) -> &Astro {
@@ -590,7 +595,7 @@ mod tests {
     fn should_new_astro() {
         // Arrange
         let date = NaiveDate::from_ymd_opt(2023, 1, 25).unwrap();
-        let julian_day = JulianDay::new(date, Gmt::new(-5).unwrap());
+        let julian_day = JulianDay::new(date, Gmt::new(-5.).unwrap());
         // Act
         let astro = Astro::new(f64::from(julian_day));
         // Assert
@@ -620,7 +625,7 @@ mod tests {
     fn should_new_astro_day() {
         // Arrange
         let date = NaiveDate::from_ymd_opt(2023, 1, 25).unwrap();
-        let julian_day = JulianDay::new(date, Gmt::new(-5).unwrap());
+        let julian_day = JulianDay::new(date, Gmt::new(-5.).unwrap());
         // Act
         let astro_day = AstroDay::new(julian_day);
         // Assert
@@ -722,7 +727,7 @@ mod tests {
     fn should_new_top_astro_day() {
         // Arrange
         let date = NaiveDate::from_ymd_opt(2023, 1, 25).unwrap();
-        let julian_day = JulianDay::new(date, Gmt::new(-5).unwrap());
+        let julian_day = JulianDay::new(date, Gmt::new(-5.).unwrap());
         let astro_day = AstroDay::new(julian_day);
         let coords = Coordinates::new(
             Latitude::new(39.0181651).unwrap(),
@@ -730,7 +735,7 @@ mod tests {
             Elevation::new(0.).unwrap(),
         );
         // Act
-        let top_astro_day = TopAstroDay::new(astro_day, coords);
+        let top_astro_day = TopAstroDay::from_ad(astro_day, coords);
         // Assert
         assert_eq!(3, top_astro_day.astros.len());
         assert_eq!(coords, top_astro_day.coords);
