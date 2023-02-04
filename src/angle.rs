@@ -1,100 +1,4 @@
-use std::ops::{Add, Div, Mul, Neg, Sub};
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Angle {
-    degrees: f64,
-    radians: f64,
-}
-
-impl Angle {
-    pub fn from_degrees(degrees: f64) -> Self {
-        let radians = degrees.to_radians();
-        Self { degrees, radians }
-    }
-
-    pub fn from_radians(radians: f64) -> Self {
-        Self {
-            radians,
-            degrees: radians.to_degrees(),
-        }
-    }
-
-    pub fn degrees(&self) -> f64 {
-        self.degrees
-    }
-
-    pub fn radians(&self) -> f64 {
-        self.radians
-    }
-
-    pub fn cos(&self) -> f64 {
-        self.radians.cos()
-    }
-
-    pub fn sin(&self) -> f64 {
-        self.radians.sin()
-    }
-
-    pub fn tan(&self) -> f64 {
-        self.radians.tan()
-    }
-}
-
-impl From<f64> for Angle {
-    fn from(value: f64) -> Self {
-        Angle::from_degrees(value)
-    }
-}
-
-impl Add for Angle {
-    type Output = Angle;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Angle::from_degrees(self.degrees + rhs.degrees)
-    }
-}
-
-impl Sub for Angle {
-    type Output = Angle;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        Angle::from_degrees(self.degrees - rhs.degrees)
-    }
-}
-
-impl Mul for Angle {
-    type Output = Angle;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        Angle::from_degrees(self.degrees * rhs.degrees)
-    }
-}
-
-impl Div for Angle {
-    type Output = Angle;
-
-    fn div(self, rhs: Self) -> Self::Output {
-        Angle::from_degrees(self.degrees / rhs.degrees)
-    }
-}
-
-impl Neg for Angle {
-    type Output = Angle;
-
-    fn neg(self) -> Self::Output {
-        Angle::from_degrees(-self.degrees)
-    }
-}
-
-impl PartialOrd for Angle {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        match self.degrees.partial_cmp(&other.degrees) {
-            Some(core::cmp::Ordering::Equal) => {}
-            ord => return ord,
-        }
-        self.radians.partial_cmp(&other.radians)
-    }
-}
+use std::ops::{Add, Div, Mul, Sub};
 
 pub trait CanFloor {
     fn floor(self) -> Self;
@@ -165,42 +69,14 @@ impl CanFloor for f64 {
     }
 }
 
-impl CanFloor for Angle {
-    fn floor(self) -> Self {
-        Angle::from_degrees(self.degrees.floor())
-    }
-}
-
 impl LimitAngle for f64 {}
-
-impl LimitAngle for Angle {}
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::PI;
-
     use super::*;
     use float_cmp::assert_approx_eq;
 
     const EPSILON_TEST: f64 = 0.00000001;
-
-    #[test]
-    fn angle_from_degrees() {
-        // Arrange
-        // Act
-        let result = Angle::from_degrees(180.);
-        // Assert
-        assert_approx_eq!(f64, PI, result.radians(), epsilon = EPSILON_TEST);
-    }
-
-    #[test]
-    fn angle_from_radians() {
-        // Arrange
-        // Act
-        let result = Angle::from_radians(PI);
-        // Assert
-        assert_approx_eq!(f64, 180., result.degrees(), epsilon = EPSILON_TEST);
-    }
 
     #[test]
     fn should_cap_fractional_positive_angle_at_360() {

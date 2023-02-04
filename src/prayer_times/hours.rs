@@ -3,10 +3,10 @@ use std::collections::HashMap;
 use chrono::NaiveTime;
 
 use crate::{
-    angle::{Angle, LimitAngle},
+    angle::LimitAngle,
     geo::{
         astro::{Astro, TopAstroDay},
-        coordinates::{Coordinates, GeoAngle, Latitude, Longitude},
+        coordinates::{Coordinates, Latitude, Longitude},
     },
     prayer_times::params::{AsrShadowRatioMethod, Params, RoundSecondsMethod},
 };
@@ -104,15 +104,17 @@ fn adj_time(hour: &mut f64, min: &mut f64, sec: &mut f64, sec_cap: f64) {
 
 fn get_fajr_isha(
     latitude: Latitude,
-    dec: Angle,
-    fajr_angle: Angle,
-    isha_angle: Angle,
+    dec: f64,
+    fajr_angle: f64,
+    isha_angle: f64,
     dhuhr_hour: f64,
 ) -> (Result<f64, ()>, Result<f64, ()>) {
-    let c = latitude.angle().cos() * dec.cos();
-    let s = latitude.angle().sin() * dec.sin();
-    let fajr_hour = (-fajr_angle.sin() - s) / c;
-    let isha_hour = (-isha_angle.sin() - s) / c;
+    let lat_rads = f64::from(latitude).to_radians();
+    let dec_rads = dec.to_radians();
+    let c = lat_rads.cos() * dec_rads.cos();
+    let s = lat_rads.sin() * dec_rads.sin();
+    let fajr_hour = ((-fajr_angle).to_radians().sin() - s) / c;
+    let isha_hour = ((-isha_angle).to_radians().sin() - s) / c;
     let fajr_hour = if fajr_hour < -INVALID_TRIGGER || fajr_hour > INVALID_TRIGGER {
         Err(())
     } else {
@@ -129,16 +131,19 @@ fn get_fajr_isha(
 
 fn get_asr(
     latitude: Latitude,
-    dec: Angle,
+    dec: f64,
     madhab: AsrShadowRatioMethod,
     dhuhr_hour: f64,
 ) -> Result<f64, ()> {
     let madhab = madhab as u8 as f64;
-    let mut asr_hour = (latitude.angle() - dec).radians();
+    let lat = f64::from(latitude);
+    let mut asr_hour = (lat - dec).to_radians();
     asr_hour = madhab + asr_hour.abs().tan();
     asr_hour = (1. / asr_hour).atan();
-    asr_hour = asr_hour.sin() - latitude.angle().sin() * dec.sin();
-    asr_hour = asr_hour / (latitude.angle().cos() * dec.cos());
+    let lat_rads = lat.to_radians();
+    let dec_rads = dec.to_radians();
+    asr_hour = asr_hour.sin() - lat_rads.sin() * dec_rads.sin();
+    asr_hour = asr_hour / (lat_rads.cos() * dec_rads.cos());
     if asr_hour < -INVALID_TRIGGER || asr_hour > INVALID_TRIGGER {
         Err(())
     } else {
@@ -147,32 +152,32 @@ fn get_asr(
 }
 
 fn get_ra_deltas(top_astro_day: &TopAstroDay) -> (f64, f64) {
-    let mut prev = top_astro_day.prev_astro().ra.degrees();
-    let mut next = top_astro_day.next_astro().ra.degrees();
+    let mut prev = top_astro_day.prev_astro().ra;
+    let mut next = top_astro_day.next_astro().ra;
     let j = 350.;
     let k = 10.;
-    if top_astro_day.astro().ra.degrees() > j && top_astro_day.next_astro().ra.degrees() < k {
+    if top_astro_day.astro().ra > j && top_astro_day.next_astro().ra < k {
         next += DEGREES_IN_CIRCLE;
     }
-    if top_astro_day.prev_astro().ra.degrees() > j && top_astro_day.astro().ra.degrees() < k {
+    if top_astro_day.prev_astro().ra > j && top_astro_day.astro().ra < k {
         prev = 0.;
     }
     let delta1 = next - prev;
-    let delta2 = next + prev - 2. * top_astro_day.astro().ra.degrees();
+    let delta2 = next + prev - 2. * top_astro_day.astro().ra;
     (delta1, delta2)
 }
 
 fn get_dec_deltas(astro_day: &TopAstroDay) -> (f64, f64) {
-    let delta1 = astro_day.next_astro().dec.degrees() - astro_day.prev_astro().dec.degrees();
-    let delta2 = astro_day.next_astro().dec.degrees() - 2. * astro_day.astro().dec.degrees()
-        + astro_day.prev_astro().dec.degrees();
+    let delta1 = astro_day.next_astro().dec - astro_day.prev_astro().dec;
+    let delta2 =
+        astro_day.next_astro().dec - 2. * astro_day.astro().dec + astro_day.prev_astro().dec;
     (delta1, delta2)
 }
 
 fn get_ra_factor(longitude: Longitude, astro: &Astro, ra_deltas: (f64, f64), val: f64) -> f64 {
-    let a = (astro.sid_time.degrees() + 360.985647 * val).cap_angle_360();
-    let b = astro.ra.degrees() + val * (ra_deltas.0 + ra_deltas.1 * val) / 2.;
-    (a + longitude.angle().degrees() - b).cap_angle_between_180()
+    let a = (astro.sid_time + 360.985647 * val).cap_angle_360();
+    let b = astro.ra + val * (ra_deltas.0 + ra_deltas.1 * val) / 2.;
+    (a + f64::from(longitude) - b).cap_angle_between_180()
 }
 
 fn get_shur_dhuhr_magh(
@@ -183,7 +188,7 @@ fn get_shur_dhuhr_magh(
     let ra_deltas = get_ra_deltas(astro_day);
 
     let dhuhr_factor =
-        (astro_day.astro().ra - coords.longitude.angle() - astro_day.astro().sid_time).degrees()
+        (astro_day.astro().ra - f64::from(coords.longitude) - astro_day.astro().sid_time)
             / DEGREES_IN_CIRCLE;
     let dhuhr_factor_cap = dhuhr_factor.cap_angle_1();
     let dhuhr_ra_factor = get_ra_factor(
@@ -245,9 +250,11 @@ fn get_refraction(weather: Weather, sun_alt: f64) -> f64 {
     refraction
 }
 
-fn get_shur_magh_adj(latitude: Latitude, dec: Angle) -> Result<f64, ()> {
-    let n = CENTER_OF_SUN_ANGLE.to_radians().sin() - latitude.angle().sin() * dec.sin();
-    let d = latitude.angle().cos() * dec.cos();
+fn get_shur_magh_adj(latitude: Latitude, dec: f64) -> Result<f64, ()> {
+    let lat_rads = f64::from(latitude).to_radians();
+    let dec_rads = dec.to_radians();
+    let n = CENTER_OF_SUN_ANGLE.to_radians().sin() - lat_rads.sin() * dec_rads.sin();
+    let d = lat_rads.cos() * dec_rads.cos();
     let r = n / d;
     if r <= -1.0 || r >= 1. {
         return Err(());
@@ -265,12 +272,12 @@ fn get_shur_magh(
     factor_cap: f64,
     ra_factor: f64,
 ) -> f64 {
-    let dec_rads = (astro.dec.degrees()
-        + factor_cap * (dec_deltas.0 + dec_deltas.1 * factor_cap) / 2.)
-        .to_radians();
-    let da_rads = (ra_factor - astro.dra.degrees()).to_radians();
-    let mut sun_alt = (coords.latitude.angle().sin() * dec_rads.sin()
-        + coords.latitude.angle().cos() * dec_rads.cos() * da_rads.cos())
+    let dec_rads =
+        (astro.dec + factor_cap * (dec_deltas.0 + dec_deltas.1 * factor_cap) / 2.).to_radians();
+    let lat_rads = f64::from(coords.latitude).to_radians();
+    let da_rads = (ra_factor - astro.dra.to_degrees()).to_radians();
+    let mut sun_alt = (lat_rads.sin() * dec_rads.sin()
+        + lat_rads.cos() * dec_rads.cos() * da_rads.cos())
     .asin()
     .to_degrees();
     sun_alt += get_refraction(weather, sun_alt);
@@ -278,9 +285,6 @@ fn get_shur_magh(
         * (factor_cap
             + (sun_alt - CENTER_OF_SUN_ANGLE
                 + REFRACTION_ALTITUDE * f64::from(coords.elevation).powf(0.5))
-                / (DEGREES_IN_CIRCLE
-                    * dec_rads.cos()
-                    * coords.latitude.angle().cos()
-                    * da_rads.sin()));
+                / (DEGREES_IN_CIRCLE * dec_rads.cos() * lat_rads.cos() * da_rads.sin()));
     hour
 }

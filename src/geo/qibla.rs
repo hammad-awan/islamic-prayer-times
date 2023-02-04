@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use super::coordinates::{Coordinates, GeoAngle};
+use super::coordinates::Coordinates;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Qibla {
@@ -29,9 +29,10 @@ impl Qibla {
     const KAABA_LONGITUDE: f64 = 39.823333;
 
     pub fn new(coords: Coordinates) -> Self {
-        let x = coords.longitude.angle().radians() - Qibla::KAABA_LONGITUDE.to_radians();
-        let y = coords.latitude.angle().cos() * Qibla::KAABA_LATITUDE.to_radians().tan()
-            - coords.latitude.angle().sin() * x.cos();
+        let lat_rads = f64::from(coords.latitude).to_radians();
+        let x = f64::from(coords.longitude).to_radians() - Qibla::KAABA_LONGITUDE.to_radians();
+        let y =
+            lat_rads.cos() * Qibla::KAABA_LATITUDE.to_radians().tan() - lat_rads.sin() * x.cos();
         let angle = x.sin().atan2(y).to_degrees();
         Self { coords, angle }
     }

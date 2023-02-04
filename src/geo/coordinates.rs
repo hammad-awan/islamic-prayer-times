@@ -1,7 +1,5 @@
 use std::fmt::Display;
 
-use crate::angle::Angle;
-
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Gmt(f64);
 
@@ -31,33 +29,34 @@ pub enum Direction {
 
 pub trait GeoAngle {
     fn direction(&self) -> Direction;
-    fn angle(&self) -> Angle;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Latitude(Angle);
+pub struct Latitude(f64);
 
 impl Latitude {
     pub fn new(degrees: f64) -> Result<Self, ()> {
         if degrees > 90. || degrees < -90. {
             Err(())
         } else {
-            Ok(Self(Angle::from_degrees(degrees)))
+            Ok(Self(degrees))
         }
     }
 }
 
 impl GeoAngle for Latitude {
     fn direction(&self) -> Direction {
-        if self.0.degrees() >= 0. {
+        if self.0 >= 0. {
             Direction::North
         } else {
             Direction::South
         }
     }
+}
 
-    fn angle(&self) -> Angle {
-        self.0
+impl From<Latitude> for f64 {
+    fn from(value: Latitude) -> Self {
+        value.0
     }
 }
 
@@ -66,7 +65,7 @@ impl Display for Latitude {
         write!(
             f,
             "{} {}",
-            self.angle().degrees().round().abs(),
+            self.0.round().abs(),
             if self.direction() == Direction::North {
                 "N"
             } else {
@@ -77,29 +76,31 @@ impl Display for Latitude {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Longitude(Angle);
+pub struct Longitude(f64);
 
 impl Longitude {
     pub fn new(degrees: f64) -> Result<Self, ()> {
         if degrees > 180. || degrees < -180. {
             Err(())
         } else {
-            Ok(Self(Angle::from_degrees(degrees)))
+            Ok(Self(degrees))
         }
     }
 }
 
 impl GeoAngle for Longitude {
     fn direction(&self) -> Direction {
-        if self.0.degrees() >= 0. {
+        if self.0 >= 0. {
             Direction::East
         } else {
             Direction::West
         }
     }
+}
 
-    fn angle(&self) -> Angle {
-        self.0
+impl From<Longitude> for f64 {
+    fn from(value: Longitude) -> Self {
+        value.0
     }
 }
 
@@ -108,7 +109,7 @@ impl Display for Longitude {
         write!(
             f,
             "{} {}",
-            self.angle().degrees().round().abs(),
+            self.0.round().abs(),
             if self.direction() == Direction::West {
                 "W"
             } else {

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{angle::Angle, geo::coordinates::Latitude};
+use crate::geo::coordinates::Latitude;
 
 use super::{ext_lat::ExtremeLatitudeMethod, Prayer};
 
@@ -34,8 +34,8 @@ pub struct Params {
     pub round_seconds: RoundSecondsMethod,
     pub asr_shadow_ratio: AsrShadowRatioMethod,
     pub extreme_latitude: ExtremeLatitudeMethod,
-    pub angles: HashMap<Prayer, Angle>,
-    pub intervals: HashMap<Prayer, Angle>,
+    pub angles: HashMap<Prayer, f64>,
+    pub intervals: HashMap<Prayer, f64>,
     pub minute_offsets: HashMap<Prayer, f64>,
 }
 
@@ -48,12 +48,12 @@ impl Params {
 
         let mut asr_shadow_ratio = AsrShadowRatioMethod::Shafi;
         let mut angles = HashMap::new();
-        angles.insert(Imsaak, Angle::from_degrees(1.5));
+        angles.insert(Imsaak, 1.5);
 
         let mut intervals = angles.clone();
-        intervals.insert(Fajr, Angle::from_degrees(0.));
-        intervals.insert(Imsaak, Angle::from_degrees(0.));
-        intervals.insert(Isha, Angle::from_degrees(0.));
+        intervals.insert(Fajr, 0.);
+        intervals.insert(Imsaak, 0.);
+        intervals.insert(Isha, 0.);
 
         let mut minute_offsets = HashMap::new();
         minute_offsets.insert(Fajr, 0.);
@@ -66,39 +66,35 @@ impl Params {
 
         match method {
             Egyptian => {
-                angles.insert(Fajr, Angle::from_degrees(20.));
-                angles.insert(Isha, Angle::from_degrees(18.));
+                angles.insert(Fajr, 20.);
+                angles.insert(Isha, 18.);
             }
             Shafi => {
-                angles.insert(Fajr, Angle::from_degrees(18.));
-                angles.insert(Isha, Angle::from_degrees(18.));
+                angles.insert(Fajr, 18.);
+                angles.insert(Isha, 18.);
             }
             Hanafi => {
-                angles.insert(Fajr, Angle::from_degrees(18.));
-                angles.insert(Isha, Angle::from_degrees(18.));
+                angles.insert(Fajr, 18.);
+                angles.insert(Isha, 18.);
                 asr_shadow_ratio = AsrShadowRatioMethod::Hanafi;
             }
             Isna => {
-                angles.insert(Fajr, Angle::from_degrees(15.));
-                angles.insert(Isha, Angle::from_degrees(15.));
+                angles.insert(Fajr, 15.);
+                angles.insert(Isha, 15.);
             }
             Mwl => {
-                angles.insert(Fajr, Angle::from_degrees(18.));
-                angles.insert(Isha, Angle::from_degrees(17.));
+                angles.insert(Fajr, 18.);
+                angles.insert(Isha, 17.);
             }
             UmmAlQurra => {
-                angles.insert(Fajr, Angle::from_degrees(19.));
-                angles.insert(Isha, Angle::from_degrees(0.));
-                intervals
-                    .entry(Isha)
-                    .and_modify(|x| *x = Angle::from_degrees(90.));
+                angles.insert(Fajr, 19.);
+                angles.insert(Isha, 0.);
+                intervals.entry(Isha).and_modify(|x| *x = 90.);
             }
             FixedIsha => {
-                angles.insert(Fajr, Angle::from_degrees(19.5));
-                angles.insert(Isha, Angle::from_degrees(0.));
-                intervals
-                    .entry(Isha)
-                    .and_modify(|x| *x = Angle::from_degrees(90.));
+                angles.insert(Fajr, 19.5);
+                angles.insert(Isha, 0.);
+                intervals.entry(Isha).and_modify(|x| *x = 90.);
             }
         }
 

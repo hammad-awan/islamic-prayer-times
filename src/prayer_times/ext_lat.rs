@@ -3,11 +3,7 @@ use std::{cell::RefCell, collections::HashMap};
 use chrono::Datelike;
 
 use crate::{
-    geo::{
-        astro::{AstroDay, TopAstroDay},
-        coordinates::Coordinates,
-        julian_day::JulianDay,
-    },
+    geo::{astro::TopAstroDay, coordinates::Coordinates, julian_day::JulianDay},
     prayer_times::hours::get_hours,
 };
 
@@ -101,16 +97,16 @@ pub fn adj_for_ext_lat(
         && params.extreme_latitude != HalfOfNightFajrIshaInvalid
         && params.extreme_latitude != HalfOfNightFajrIshaAlways
     {
-        if params.intervals[&Fajr].degrees() != 0. {
+        if params.intervals[&Fajr] != 0. {
             *hours[&Fajr].borrow_mut() = hours[&Shurooq].borrow().map(|mut x| {
-                x.value -= params.intervals[&Fajr].degrees() / 60.;
+                x.value -= params.intervals[&Fajr] / 60.;
                 x
             });
         }
 
-        if params.intervals[&Isha].degrees() != 0. {
+        if params.intervals[&Isha] != 0. {
             *hours[&Isha].borrow_mut() = hours[&Maghrib].borrow().map(|mut x| {
-                x.value += params.intervals[&Isha].degrees() / 60.;
+                x.value += params.intervals[&Isha] / 60.;
                 x
             });
         }
@@ -246,10 +242,10 @@ fn adj_sev_half(
             | HalfOfNightFajrIshaAlways => {
                 if params.extreme_latitude == HalfOfNightFajrIshaAlways {
                     *hours[&Fajr].borrow_mut() = Ok(PrayerHour::new_extreme(
-                        portion - params.intervals[&Fajr].degrees() / 60.,
+                        portion - params.intervals[&Fajr] / 60.,
                     ));
                     *hours[&Isha].borrow_mut() = Ok(PrayerHour::new_extreme(
-                        portion + params.intervals[&Isha].degrees() / 60.,
+                        portion + params.intervals[&Isha] / 60.,
                     ));
                 } else {
                     *hours[&Fajr].borrow_mut() = Ok(PrayerHour::new_extreme(shur_hour - portion));
@@ -260,7 +256,7 @@ fn adj_sev_half(
                 if hours[&Fajr].borrow().is_err() {
                     if params.extreme_latitude == HalfOfNightFajrIshaInvalid {
                         *hours[&Fajr].borrow_mut() = Ok(PrayerHour::new_extreme(
-                            portion - params.intervals[&Fajr].degrees() / 60.,
+                            portion - params.intervals[&Fajr] / 60.,
                         ));
                     } else {
                         *hours[&Fajr].borrow_mut() =
@@ -270,7 +266,7 @@ fn adj_sev_half(
                 if hours[&Isha].borrow().is_err() {
                     if params.extreme_latitude == HalfOfNightFajrIshaInvalid {
                         *hours[&Isha].borrow_mut() = Ok(PrayerHour::new_extreme(
-                            portion + params.intervals[&Isha].degrees() / 60.,
+                            portion + params.intervals[&Isha] / 60.,
                         ));
                     } else {
                         *hours[&Isha].borrow_mut() =
@@ -300,14 +296,14 @@ fn adj_min_inv(hours: &HashMap<Prayer, RefCell<Result<PrayerHour, ()>>>, params:
 
     if hours[&Fajr].borrow().is_err() {
         *hours[&Fajr].borrow_mut() = hours[&Shurooq].borrow().map(|mut x| {
-            x.value -= params.intervals[&Fajr].degrees() / 60.;
+            x.value -= params.intervals[&Fajr] / 60.;
             x.extreme = true;
             x
         });
     }
     if hours[&Isha].borrow().is_err() {
         *hours[&Isha].borrow_mut() = hours[&Maghrib].borrow().map(|mut x| {
-            x.value += params.intervals[&Isha].degrees() / 60.;
+            x.value += params.intervals[&Isha] / 60.;
             x.extreme = true;
             x
         });

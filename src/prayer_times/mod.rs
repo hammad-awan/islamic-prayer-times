@@ -1,6 +1,7 @@
+pub mod params;
+
 mod ext_lat;
 mod hours;
-pub mod params;
 
 use std::collections::HashMap;
 
