@@ -2,9 +2,10 @@ use std::collections::HashMap;
 
 use crate::geo::coordinates::Latitude;
 
-use super::{ext_lat::ExtremeLatitudeMethod, Prayer};
+use super::Prayer;
 
 pub enum Method {
+    None,
     Egyptian,
     Shafi,
     Hanafi,
@@ -15,15 +16,33 @@ pub enum Method {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum RoundSecondsMethod {
-    NoRounding,
+pub enum ExtremeLatitudeMethod {
+    None,
+    NearestLatitudeAllPrayersAlways,
+    NearestLatitudeFajrIshaAlways,
+    NearestLatitudeFajrIshaInvalid,
+    NearestGoodDayAllPrayersAlways,
+    NearestGoodDayFajrIshaInvalid,
+    SeventhOfNightFajrIshaAlways,
+    SeventhOfNightFajrIshaInvalid,
+    SeventhOfDayFajrIshaAlways,
+    SeventhOfDayFajrIshaInvalid,
+    HalfOfNightFajrIshaAlways,
+    HalfOfNightFajrIshaInvalid,
+    MinutesFromMaghribFajrIshaAlways,
+    MinutesFromMaghribFajrIshaInvalid,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum RoundSeconds {
+    None,
     NormalRounding,
     SpecialRounding,
     AggressiveRounding,
 }
 
 #[derive(Debug, Clone, Copy)]
-pub enum AsrShadowRatioMethod {
+pub enum AsrShadowRatio {
     Shafi = 1,
     Hanafi,
 }
@@ -31,8 +50,8 @@ pub enum AsrShadowRatioMethod {
 pub struct Params {
     pub method: Method,
     pub nearest_latitude: Latitude,
-    pub round_seconds: RoundSecondsMethod,
-    pub asr_shadow_ratio: AsrShadowRatioMethod,
+    pub round_seconds: RoundSeconds,
+    pub asr_shadow_ratio: AsrShadowRatio,
     pub extreme_latitude: ExtremeLatitudeMethod,
     pub angles: HashMap<Prayer, f64>,
     pub intervals: HashMap<Prayer, f64>,
@@ -41,12 +60,11 @@ pub struct Params {
 
 impl Params {
     pub fn new(method: Method) -> Self {
-        use ExtremeLatitudeMethod::*;
         use Method::*;
         use Prayer::*;
-        use RoundSecondsMethod::*;
+        use RoundSeconds::*;
 
-        let mut asr_shadow_ratio = AsrShadowRatioMethod::Shafi;
+        let mut asr_shadow_ratio = AsrShadowRatio::Shafi;
         let mut angles = HashMap::new();
         angles.insert(Imsaak, 1.5);
 
@@ -65,6 +83,10 @@ impl Params {
         minute_offsets.insert(Imsaak, 0.);
 
         match method {
+            Method::None => {
+                angles.insert(Fajr, 0.);
+                angles.insert(Isha, 0.);
+            }
             Egyptian => {
                 angles.insert(Fajr, 20.);
                 angles.insert(Isha, 18.);
@@ -76,7 +98,7 @@ impl Params {
             Hanafi => {
                 angles.insert(Fajr, 18.);
                 angles.insert(Isha, 18.);
-                asr_shadow_ratio = AsrShadowRatioMethod::Hanafi;
+                asr_shadow_ratio = AsrShadowRatio::Hanafi;
             }
             Isna => {
                 angles.insert(Fajr, 15.);
@@ -103,7 +125,7 @@ impl Params {
             nearest_latitude: Latitude::new(48.5).unwrap(),
             round_seconds: SpecialRounding,
             asr_shadow_ratio,
-            extreme_latitude: NearestGoodDayFajrIshaInvalid,
+            extreme_latitude: ExtremeLatitudeMethod::NearestGoodDayFajrIshaInvalid,
             angles,
             intervals,
             minute_offsets,
