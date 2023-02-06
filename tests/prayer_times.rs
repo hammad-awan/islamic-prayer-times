@@ -23,7 +23,7 @@ fn test() {
     let date_range = DateRange::new(start_date, end_date).unwrap();
 
     // Act
-    let pt_by_day = get_prayer_times(&params, &location, date_range);
+    let pt_by_day = get_prayer_times(&params, location, date_range);
     // Assert
 
     assert_eq!(3, pt_by_day.len());

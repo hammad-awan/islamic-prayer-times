@@ -89,12 +89,12 @@ impl Params {
             UmmAlQurra => {
                 angles.insert(Fajr, 19.);
                 angles.insert(Isha, 0.);
-                intervals.entry(Isha).and_modify(|x| *x = 90.);
+                *intervals.get_mut(&Isha).unwrap() = 90.;
             }
             FixedIsha => {
                 angles.insert(Fajr, 19.5);
                 angles.insert(Isha, 0.);
-                intervals.entry(Isha).and_modify(|x| *x = 90.);
+                *intervals.get_mut(&Isha).unwrap() = 90.;
             }
         }
 

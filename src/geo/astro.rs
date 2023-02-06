@@ -360,6 +360,8 @@ const SIN_COEFFICIENT: [(i8, i8, i8, i8, i8); 63] = [
     (2, -1, 0, 2, 2),
 ];
 
+const EARTH_RADIUS: f64 = 6378140.;
+
 #[derive(Debug, Clone, Copy)]
 pub struct Astro {
     pub dra: f64,
@@ -520,21 +522,19 @@ impl TopAstroDay {
         let mut astros = Vec::new();
 
         for astro in astro_day.astros.iter() {
-            let j = 0.99664719;
-            let k = 6378140.;
-            let lhour = (astro.sid_time + f64::from(coords.longitude) - astro.ra)
+            let b_a = 0.99664719;
+            let lat_rads = f64::from(coords.latitude).to_radians();
+            let tu = (b_a * lat_rads.tan()).atan();
+            let elev = f64::from(coords.elevation);
+            let tcos = tu.cos() + elev / EARTH_RADIUS * lat_rads.cos();
+            let tsin = b_a * tu.sin() + elev / EARTH_RADIUS * lat_rads.sin();
+            let dec_cos = astro.dec.cos();
+            let sp_sin = (8.794 / (3600. * astro.rsum)).to_radians().sin();
+            let lhour_rads = (astro.sid_time + f64::from(coords.longitude) - astro.ra)
                 .cap_angle_360()
                 .to_radians();
-            let lhour_cos = lhour.cos();
-            let sp = (8.794 / (3600. * astro.rsum)).to_radians();
-            let sp_sin = sp.sin();
-            let elev = f64::from(coords.elevation);
-            let lat_rads = f64::from(coords.latitude).to_radians();
-            let tu = (j * lat_rads.tan()).atan();
-            let tcos = tu.cos() + elev / k * lat_rads.cos();
-            let tsin = j * tu.sin() + elev / k * lat_rads.sin();
-            let dec_cos = astro.dec.cos();
-            let dra = -tcos * sp_sin * lhour.sin() / (dec_cos - tcos * sp_sin * lhour_cos);
+            let lhour_cos = lhour_rads.cos();
+            let dra = -tcos * sp_sin * lhour_rads.sin() / (dec_cos - tcos * sp_sin * lhour_cos);
             let dec = (astro.dec.sin() - tsin * sp_sin) * dra.cos();
             let dec = dec.atan2(dec_cos - tcos * sp_sin * lhour_cos).to_degrees();
 
