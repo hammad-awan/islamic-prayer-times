@@ -73,7 +73,7 @@ fn test_juneau_ak_default_params() {
     assert_eq!(NaiveTime::from_hms_opt(5, 58, 0).unwrap(), fajr.time);
     assert_eq!(false, fajr.extreme);
     let shurooq = pts.get(&Prayer::Shurooq).unwrap().unwrap();
-    assert_eq!(NaiveTime::from_hms_opt(7, 48, 0).unwrap(), shurooq.time);
+    assert_eq!(NaiveTime::from_hms_opt(7, 51, 0).unwrap(), shurooq.time);
     assert_eq!(false, shurooq.extreme);
     let dhuhr = pts.get(&Prayer::Dhuhr).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(12, 12, 0).unwrap(), dhuhr.time);
@@ -82,7 +82,7 @@ fn test_juneau_ak_default_params() {
     assert_eq!(NaiveTime::from_hms_opt(14, 3, 0).unwrap(), asr.time);
     assert_eq!(false, asr.extreme);
     let maghrib = pts.get(&Prayer::Maghrib).unwrap().unwrap();
-    assert_eq!(NaiveTime::from_hms_opt(16, 36, 0).unwrap(), maghrib.time);
+    assert_eq!(NaiveTime::from_hms_opt(16, 33, 0).unwrap(), maghrib.time);
     assert_eq!(false, maghrib.extreme);
     let isha = pts.get(&Prayer::Isha).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(18, 25, 0).unwrap(), isha.time);
@@ -110,7 +110,7 @@ fn test_juneau_ak_default_params_near_lat_all_prayers_always() {
     assert_eq!(NaiveTime::from_hms_opt(5, 51, 0).unwrap(), fajr.time);
     assert_eq!(true, fajr.extreme);
     let shurooq = pts.get(&Prayer::Shurooq).unwrap().unwrap();
-    assert_eq!(NaiveTime::from_hms_opt(7, 17, 0).unwrap(), shurooq.time);
+    assert_eq!(NaiveTime::from_hms_opt(7, 19, 0).unwrap(), shurooq.time);
     assert_eq!(true, shurooq.extreme);
     let dhuhr = pts.get(&Prayer::Dhuhr).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(12, 12, 0).unwrap(), dhuhr.time);
@@ -119,7 +119,7 @@ fn test_juneau_ak_default_params_near_lat_all_prayers_always() {
     assert_eq!(NaiveTime::from_hms_opt(14, 38, 0).unwrap(), asr.time);
     assert_eq!(true, asr.extreme);
     let maghrib = pts.get(&Prayer::Maghrib).unwrap().unwrap();
-    assert_eq!(NaiveTime::from_hms_opt(17, 7, 0).unwrap(), maghrib.time);
+    assert_eq!(NaiveTime::from_hms_opt(17, 5, 0).unwrap(), maghrib.time);
     assert_eq!(true, maghrib.extreme);
     let isha = pts.get(&Prayer::Isha).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(18, 32, 0).unwrap(), isha.time);
@@ -147,7 +147,7 @@ fn test_juneau_ak_default_params_near_lat_fajr_isha_always() {
     assert_eq!(NaiveTime::from_hms_opt(5, 51, 0).unwrap(), fajr.time);
     assert_eq!(true, fajr.extreme);
     let shurooq = pts.get(&Prayer::Shurooq).unwrap().unwrap();
-    assert_eq!(NaiveTime::from_hms_opt(7, 48, 0).unwrap(), shurooq.time);
+    assert_eq!(NaiveTime::from_hms_opt(7, 51, 0).unwrap(), shurooq.time);
     assert_eq!(false, shurooq.extreme);
     let dhuhr = pts.get(&Prayer::Dhuhr).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(12, 12, 0).unwrap(), dhuhr.time);
@@ -156,7 +156,7 @@ fn test_juneau_ak_default_params_near_lat_fajr_isha_always() {
     assert_eq!(NaiveTime::from_hms_opt(14, 3, 0).unwrap(), asr.time);
     assert_eq!(false, asr.extreme);
     let maghrib = pts.get(&Prayer::Maghrib).unwrap().unwrap();
-    assert_eq!(NaiveTime::from_hms_opt(16, 36, 0).unwrap(), maghrib.time);
+    assert_eq!(NaiveTime::from_hms_opt(16, 33, 0).unwrap(), maghrib.time);
     assert_eq!(false, maghrib.extreme);
     let isha = pts.get(&Prayer::Isha).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(18, 32, 0).unwrap(), isha.time);
@@ -184,7 +184,7 @@ fn test_juneau_ak_default_params_near_lat_fajr_isha_inv() {
     assert_eq!(NaiveTime::from_hms_opt(5, 58, 0).unwrap(), fajr.time);
     assert_eq!(false, fajr.extreme);
     let shurooq = pts.get(&Prayer::Shurooq).unwrap().unwrap();
-    assert_eq!(NaiveTime::from_hms_opt(7, 48, 0).unwrap(), shurooq.time);
+    assert_eq!(NaiveTime::from_hms_opt(7, 51, 0).unwrap(), shurooq.time);
     assert_eq!(false, shurooq.extreme);
     let dhuhr = pts.get(&Prayer::Dhuhr).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(12, 12, 0).unwrap(), dhuhr.time);
@@ -193,7 +193,7 @@ fn test_juneau_ak_default_params_near_lat_fajr_isha_inv() {
     assert_eq!(NaiveTime::from_hms_opt(14, 3, 0).unwrap(), asr.time);
     assert_eq!(false, asr.extreme);
     let maghrib = pts.get(&Prayer::Maghrib).unwrap().unwrap();
-    assert_eq!(NaiveTime::from_hms_opt(16, 36, 0).unwrap(), maghrib.time);
+    assert_eq!(NaiveTime::from_hms_opt(16, 33, 0).unwrap(), maghrib.time);
     assert_eq!(false, maghrib.extreme);
     let isha = pts.get(&Prayer::Isha).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(18, 25, 0).unwrap(), isha.time);
@@ -221,7 +221,7 @@ fn test_juneau_ak_default_params_near_good_day_all_prayers_always() {
     assert_eq!(NaiveTime::from_hms_opt(5, 58, 0).unwrap(), fajr.time);
     assert_eq!(true, fajr.extreme);
     let shurooq = pts.get(&Prayer::Shurooq).unwrap().unwrap();
-    assert_eq!(NaiveTime::from_hms_opt(7, 48, 0).unwrap(), shurooq.time);
+    assert_eq!(NaiveTime::from_hms_opt(7, 51, 0).unwrap(), shurooq.time);
     assert_eq!(true, shurooq.extreme);
     let dhuhr = pts.get(&Prayer::Dhuhr).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(12, 12, 0).unwrap(), dhuhr.time);
@@ -230,7 +230,7 @@ fn test_juneau_ak_default_params_near_good_day_all_prayers_always() {
     assert_eq!(NaiveTime::from_hms_opt(14, 3, 0).unwrap(), asr.time);
     assert_eq!(true, asr.extreme);
     let maghrib = pts.get(&Prayer::Maghrib).unwrap().unwrap();
-    assert_eq!(NaiveTime::from_hms_opt(16, 36, 0).unwrap(), maghrib.time);
+    assert_eq!(NaiveTime::from_hms_opt(16, 33, 0).unwrap(), maghrib.time);
     assert_eq!(true, maghrib.extreme);
     let isha = pts.get(&Prayer::Isha).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(18, 25, 0).unwrap(), isha.time);

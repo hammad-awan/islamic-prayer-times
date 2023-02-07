@@ -12,7 +12,6 @@ use super::{params::Weather, Prayer};
 
 const DEGREES_TO_10_BASE: f64 = 0.066666666666666666;
 const INVALID_TRIGGER: f64 = 1.;
-const REFRACTION_ALTITUDE: f64 = 0.0347;
 const CENTER_OF_SUN_ANGLE: f64 = -0.83337;
 const DEGREES_IN_CIRCLE: f64 = 360.;
 const DEF_ROUND_SEC: f64 = 30.;
@@ -138,7 +137,7 @@ fn get_asr(
     }
 }
 
-fn get_ra_deltas(top_astro_day: &TopAstroDay) -> (f64, f64) {
+fn get_ra_interp_deltas(top_astro_day: &TopAstroDay) -> (f64, f64) {
     let mut prev_ra = top_astro_day.prev_astro().ra;
     let mut next_ra = top_astro_day.next_astro().ra;
     let j = 350.;
@@ -154,54 +153,59 @@ fn get_ra_deltas(top_astro_day: &TopAstroDay) -> (f64, f64) {
     (delta1, delta2)
 }
 
-fn get_dec_deltas(top_astro_day: &TopAstroDay) -> (f64, f64) {
+fn get_dec_interp_deltas(top_astro_day: &TopAstroDay) -> (f64, f64) {
     let delta1 = top_astro_day.next_astro().dec - top_astro_day.prev_astro().dec;
     let delta2 = top_astro_day.next_astro().dec - 2. * top_astro_day.astro().dec
         + top_astro_day.prev_astro().dec;
     (delta1, delta2)
 }
 
-fn get_ra_factor(top_astro_day: &TopAstroDay, ra_deltas: (f64, f64), val: f64) -> f64 {
-    let sid_g = (top_astro_day.astro().sid_time + 360.985647 * val).cap_angle_360();
-    let a = top_astro_day.astro().ra + val * (ra_deltas.0 + ra_deltas.1 * val) / 2.;
-    (sid_g + f64::from(top_astro_day.coords.longitude) - a).cap_angle_between_180()
+fn get_hour_angle(top_astro_day: &TopAstroDay, ra_interp_deltas: (f64, f64), val: f64) -> f64 {
+    // Sidereal time at Greenwich
+    let sid_time_gw = (top_astro_day.astro().sid_time + 360.985647 * val).cap_angle_360();
+    // Astronomical Algorithms pg. 24 (3.3)
+    let ra_interp =
+        top_astro_day.astro().ra + val * (ra_interp_deltas.0 + ra_interp_deltas.1 * val) / 2.;
+    (sid_time_gw + f64::from(top_astro_day.coords.longitude) - ra_interp).cap_angle_between_180()
 }
 
 fn get_shur_dhuhr_magh(
     top_astro_day: &TopAstroDay,
     weather: Weather,
 ) -> (Result<f64, ()>, f64, Result<f64, ()>) {
-    let ra_deltas = get_ra_deltas(top_astro_day);
+    // Astronomical Algorithms pg. 100-104
+    let ra_interp_deltas = get_ra_interp_deltas(top_astro_day);
 
-    let dhuhr_factor = (top_astro_day.astro().ra
+    let m_0 = (top_astro_day.astro().ra
         - f64::from(top_astro_day.coords.longitude)
         - top_astro_day.astro().sid_time)
         / DEGREES_IN_CIRCLE;
-    let dhuhr_factor_cap = dhuhr_factor.cap_angle_1();
-    let dhuhr_ra_factor = get_ra_factor(top_astro_day, ra_deltas, dhuhr_factor_cap);
-    let dhuhr_hour = HRS_PER_DAY * (dhuhr_factor_cap - dhuhr_ra_factor / DEGREES_IN_CIRCLE);
+    let dhuhr_m_time = m_0.cap_angle_1();
+    let dhuhr_hour_angle = get_hour_angle(top_astro_day, ra_interp_deltas, dhuhr_m_time);
+    let dhuhr_delta_m = dhuhr_hour_angle / DEGREES_IN_CIRCLE;
+    let dhuhr_hour = HRS_PER_DAY * (dhuhr_m_time - dhuhr_delta_m);
 
-    let shur_magh_res = if let Ok(sm_adj) = get_shur_magh_adj(top_astro_day) {
-        let dec_deltas = get_dec_deltas(top_astro_day);
+    let shur_magh_res = if let Ok(sm_m_0_adj) = get_shur_magh_m_0_adj(top_astro_day) {
+        let dec_interp_deltas = get_dec_interp_deltas(top_astro_day);
 
-        let shur_factor_cap = (dhuhr_factor - sm_adj).cap_angle_1();
-        let shur_ra_factor = get_ra_factor(top_astro_day, ra_deltas, shur_factor_cap);
+        let shuhr_m_time = (m_0 - sm_m_0_adj).cap_angle_1();
+        let shuhr_hour_angle = get_hour_angle(top_astro_day, ra_interp_deltas, shuhr_m_time);
         let shur_hour = get_shur_magh(
             top_astro_day,
             weather,
-            dec_deltas,
-            shur_factor_cap,
-            shur_ra_factor,
+            dec_interp_deltas,
+            shuhr_m_time,
+            shuhr_hour_angle,
         );
 
-        let magh_factor_cap = (dhuhr_factor + sm_adj).cap_angle_1();
-        let magh_ra_factor = get_ra_factor(top_astro_day, ra_deltas, magh_factor_cap);
+        let magh_m_time = (m_0 + sm_m_0_adj).cap_angle_1();
+        let magh_hour_angle = get_hour_angle(top_astro_day, ra_interp_deltas, magh_m_time);
         let magh_hour = get_shur_magh(
             top_astro_day,
             weather,
-            dec_deltas,
-            magh_factor_cap,
-            magh_ra_factor,
+            dec_interp_deltas,
+            magh_m_time,
+            magh_hour_angle,
         );
 
         (Ok(shur_hour), Ok(magh_hour))
@@ -213,18 +217,20 @@ fn get_shur_dhuhr_magh(
 }
 
 fn get_refraction(weather: Weather, sun_alt: f64) -> f64 {
-    let w = f64::from(weather.pressure) / 1010. * (283. / (273. + f64::from(weather.temperature)));
-    let s = 1.02
+    // Astronomical Algorithms pg. 105-107
+    // Astronomical Algorithms pg. 106 (16.4)
+    let r = 1.02
         / ((sun_alt + (10.3 / (sun_alt + 5.11)))
             .to_radians()
             .tan()
             .to_degrees()
             + 0.0019279);
-    let refraction = w * s / 60.;
-    refraction
+    // Astronomical Algorithms pg. 107
+    let m = f64::from(weather.pressure) / 1010. * (283. / (273. + f64::from(weather.temperature)));
+    m * r / 60.
 }
 
-fn get_shur_magh_adj(top_astro_day: &TopAstroDay) -> Result<f64, ()> {
+fn get_shur_magh_m_0_adj(top_astro_day: &TopAstroDay) -> Result<f64, ()> {
     let lat_rads = f64::from(top_astro_day.coords.latitude).to_radians();
     let dec_rads = top_astro_day.astro().dec.to_radians();
     let n = CENTER_OF_SUN_ANGLE.to_radians().sin() - lat_rads.sin() * dec_rads.sin();
@@ -241,24 +247,26 @@ fn get_shur_magh_adj(top_astro_day: &TopAstroDay) -> Result<f64, ()> {
 fn get_shur_magh(
     top_astro_day: &TopAstroDay,
     weather: Weather,
-    dec_deltas: (f64, f64),
-    factor_cap: f64,
-    ra_factor: f64,
+    dec_interp_deltas: (f64, f64),
+    m_time: f64,
+    hour_angle: f64,
 ) -> f64 {
-    let dec_rads = (top_astro_day.astro().dec
-        + factor_cap * (dec_deltas.0 + dec_deltas.1 * factor_cap) / 2.)
+    // Astronomical Algorithms pg. 24 (3.3)
+    let dec_interp_rads = (top_astro_day.astro().dec
+        + m_time * (dec_interp_deltas.0 + dec_interp_deltas.1 * m_time) / 2.)
         .to_radians();
     let lat_rads = f64::from(top_astro_day.coords.latitude).to_radians();
-    let th = ra_factor.to_radians() - top_astro_day.astro().dra;
-    let mut sun_alt = (lat_rads.sin() * dec_rads.sin()
-        + lat_rads.cos() * dec_rads.cos() * th.cos())
+    // Astronomical Algorithms pg. 93 (13.6)
+    let hour_angle_rads = hour_angle.to_radians();
+    // "Airless" altitude of sun
+    let mut sun_alt = (lat_rads.sin() * dec_interp_rads.sin()
+        + lat_rads.cos() * dec_interp_rads.cos() * hour_angle_rads.cos())
     .asin()
     .to_degrees();
+    // Astronomical Algorithms pg. 105 (Apparent altitude h0)
     sun_alt += get_refraction(weather, sun_alt);
-    let refr_factor = REFRACTION_ALTITUDE * f64::from(top_astro_day.coords.elevation).powf(0.5);
-    let hour = HRS_PER_DAY
-        * (factor_cap
-            + (sun_alt - CENTER_OF_SUN_ANGLE + refr_factor)
-                / (DEGREES_IN_CIRCLE * dec_rads.cos() * lat_rads.cos() * th.sin()));
-    hour
+    // Astronomical Algorithms pg. 103
+    let delta_m = (sun_alt - CENTER_OF_SUN_ANGLE)
+        / (DEGREES_IN_CIRCLE * dec_interp_rads.cos() * lat_rads.cos() * hour_angle_rads.sin());
+    HRS_PER_DAY * (m_time + delta_m)
 }
