@@ -4,6 +4,7 @@ use super::{coordinates::Coordinates, julian_day::JulianDay};
 
 static TEN_POW_EIGHT: f64 = 10_i32.pow(8) as f64;
 
+// Astronomical Algorithms pg. 418-419
 const L0: [(f64, f64, f64); 64] = [
     (175347046., 0., 0.),
     (3341656., 4.6692568, 6283.07585),
@@ -71,6 +72,7 @@ const L0: [(f64, f64, f64); 64] = [
     (25., 3.16, 4690.48),
 ];
 
+// Astronomical Algorithms pg. 419
 const L1: [(f64, f64, f64); 34] = [
     (628331966747., 0., 0.),
     (206059., 2.678235, 6283.07585),
@@ -108,6 +110,7 @@ const L1: [(f64, f64, f64); 34] = [
     (6., 4.67, 4690.48),
 ];
 
+// Astronomical Algorithms pg. 420
 const L2: [(f64, f64, f64); 20] = [
     (52919., 0., 0.),
     (8720., 1.0721, 6283.0758),
@@ -131,6 +134,7 @@ const L2: [(f64, f64, f64); 20] = [
     (2., 3.75, 0.98),
 ];
 
+// Astronomical Algorithms pg. 420
 const L3: [(f64, f64, f64); 7] = [
     (289., 5.844, 6283.076),
     (35., 0., 0.),
@@ -141,14 +145,17 @@ const L3: [(f64, f64, f64); 7] = [
     (1., 5.97, 242.73),
 ];
 
+// Astronomical Algorithms pg. 420
 const L4: [(f64, f64, f64); 3] = [
     (114.0, 3.142, 0.0),
     (8.0, 4.13, 6283.08),
     (1.0, 3.84, 12566.15),
 ];
 
+// Astronomical Algorithms pg. 420
 const L5: [(f64, f64, f64); 1] = [(1., 3.14, 0.)];
 
+// Astronomical Algorithms pg. 420
 const B0: [(f64, f64, f64); 5] = [
     (280., 3.199, 84334.662),
     (102., 5.422, 5507.553),
@@ -157,8 +164,10 @@ const B0: [(f64, f64, f64); 5] = [
     (32., 4., 1577.34),
 ];
 
+// Astronomical Algorithms pg. 420
 const B1: [(f64, f64, f64); 2] = [(9., 3.9, 5507.55), (6., 1.73, 5223.69)];
 
+// Astronomical Algorithms pg. 420-421
 const R0: [(f64, f64, f64); 40] = [
     (100013989., 0., 0.),
     (1670700., 3.0984635, 6283.07585),
@@ -202,6 +211,7 @@ const R0: [(f64, f64, f64); 40] = [
     (26., 4.59, 10447.39),
 ];
 
+// Astronomical Algorithms pg. 421
 const R1: [(f64, f64, f64); 10] = [
     (103019., 1.10749, 6283.07585),
     (1721., 1.0644, 12566.1517),
@@ -215,6 +225,7 @@ const R1: [(f64, f64, f64); 10] = [
     (9., 0.27, 5486.78),
 ];
 
+// Astronomical Algorithms pg. 421
 const R2: [(f64, f64, f64); 6] = [
     (4359., 5.7846, 6283.0758),
     (124., 5.579, 12566.152),
@@ -224,10 +235,13 @@ const R2: [(f64, f64, f64); 6] = [
     (3., 5.47, 18849.),
 ];
 
+// Astronomical Algorithms pg. 421
 const R3: [(f64, f64, f64); 2] = [(145., 4.273, 6283.076), (7., 3.92, 12566.15)];
 
+// Astronomical Algorithms pg. 421
 const R4: [(f64, f64, f64); 1] = [(4., 2.56, 6283.08)];
 
+// Astronomical Algorithms pg. 145-146 (Table 22.A)
 const PE: [(f64, f64, f64, f64); 63] = [
     (-171996., -174.2, 92025., 8.9),
     (-13187., -1.6, 5736., -3.1),
@@ -294,6 +308,7 @@ const PE: [(f64, f64, f64, f64); 63] = [
     (-3., 0., 0., 0.),
 ];
 
+// Astronomical Algorithms pg. 145-146 (Table 22.A)
 const SIN_COEFFICIENT: [(i8, i8, i8, i8, i8); 63] = [
     (0, 0, 0, 0, 1),
     (-2, 0, 0, 2, 2),
@@ -364,16 +379,18 @@ const EARTH_RADIUS: f64 = 6378140.;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Astro {
-    pub dra: f64,
-    pub dec: f64,
-    pub ra: f64,
-    pub rsum: f64,
-    pub sid_time: f64,
+    pub dra: f64,      // Delta Right Ascension
+    pub dec: f64,      // Declination
+    pub ra: f64,       // Right Ascension
+    pub rsum: f64,     // Sum of periodic values for radius vector R
+    pub sid_time: f64, // Sidereal time
 }
 
 impl Astro {
     fn new(julian_day: f64) -> Self {
+        // Astronomical Algorithms (AA) pg. 143-148
         let j = julian_day - 2451545.;
+        // Astronomical Algorithms pg. 143 (22.1)
         let jc = j / 36525.;
         let jm = jc / 10.;
         let mut jms = Astro::pow_series(jm, 5);
@@ -387,25 +404,31 @@ impl Astro {
         let bsum = Astro::calc_sum(&bs, &jms);
         let rsum = Astro::calc_sum(&rs, &jms);
 
+        // Astronomical Algorithms pg. 144 (Mean elongation of the Moon from the Sun)
         let jc2 = jc * jc;
         let jc3 = jc2 * jc;
-        let x0 = 297.85036 + 445267.111480 * jc - 0.0019142 * jc2 + jc3 / 189474.;
-        let x1 = 357.52772 + 35999.050340 * jc - 0.0001603 * jc2 - jc3 / 300000.;
-        let x2 = 134.96298 + 477198.867398 * jc + 0.0086972 * jc2 + jc3 / 56250.;
-        let x3 = 93.27191 + 483202.017538 * jc - 0.0036825 * jc2 + jc3 / 327270.;
-        let x4 = 125.04452 - 1934.136261 * jc + 0.0020708 * jc2 + jc3 / 450000.;
-        let xi_arr = [x0, x1, x2, x3, x4];
+        let d = 297.85036 + 445267.111480 * jc - 0.0019142 * jc2 + jc3 / 189474.;
+        // Astronomical Algorithms pg. 144 (Mean anomaly of the Sun)
+        let m = 357.52772 + 35999.050340 * jc - 0.0001603 * jc2 - jc3 / 300000.;
+        // Astronomical Algorithms pg. 144 (Mean anomaly of the Moon)
+        let m_p = 134.96298 + 477198.867398 * jc + 0.0086972 * jc2 + jc3 / 56250.;
+        // Astronomical Algorithms pg. 144 (Moon's argument of latitude)
+        let f = 93.27191 + 483202.017538 * jc - 0.0036825 * jc2 + jc3 / 327270.;
+        // Astronomical Algorithms pg. 144 (Longitude of the ascending node of the Moon's mean orbit)
+        let om = 125.04452 - 1934.136261 * jc + 0.0020708 * jc2 + jc3 / 450000.;
+        let xi_arr = [d, m, m_p, f, om];
 
-        let (psi, epsilon) = Astro::calc_psi_epsilon(&xi_arr, jc);
+        // Nutation in longitude and obliquity
+        let (psi, eps) = Astro::calc_psi_eps(&xi_arr, jc);
 
         let k = 36000000.;
         let delta_psi = psi / k;
-        let delta_eps = epsilon / k;
+        let delta_eps = eps / k;
 
+        // Astronomical Algorithms pg. 147 (22.3) (Mean obliquity of the ecliptic)
         let u = jm / 10.;
         let us = Astro::pow_series(u, 10);
-
-        let e = 84381.448 - 4680.93 * us[0] - 1.55 * us[1] + 1999.25 * us[2]
+        let e0 = 84381.448 - 4680.93 * us[0] - 1.55 * us[1] + 1999.25 * us[2]
             - 51.38 * us[3]
             - 249.67 * us[4]
             - 39.05 * us[5]
@@ -413,24 +436,27 @@ impl Astro {
             + 27.87 * us[7]
             + 5.79 * us[8]
             + 2.45 * us[9];
-        let e = e / 3600. + delta_eps;
-        let e = e.to_radians();
-        let e_cos = e.cos();
-        let e_sin = e.sin();
+        // True obliquity of the ecliptic
+        let e = (e0 / 3600. + delta_eps).to_radians();
+        // Ecliptical longitude
         let l = lsum.to_degrees().cap_angle_360() + 180.;
         let l = l.cap_angle_360() + delta_psi + -20.4898 / (3600. * rsum);
         let l = l.to_radians();
-        let l_sin = l.sin();
+        // Ecliptical latitude
         let b = -bsum.to_degrees();
         let b = b.to_radians();
 
-        let ran = l_sin * e_cos - b.tan() * e_sin;
+        // Astronomical Algorithms pg. 93 (13.3)
+        let ran = l.sin() * e.cos() - b.tan() * e.sin();
         let ra = ran.atan2(l.cos()).to_degrees().cap_angle_360();
 
-        let dec = (b.sin() * e_cos + b.cos() * e_sin * l_sin).asin();
+        // Astronomical Algorithms pg. 93 (13.4)
+        let dec = (b.sin() * e.cos() + b.cos() * e.sin() * l.sin()).asin();
 
+        // Astronomical Algorithms pg. 88 (Mean sidereal time)
         let v0 = 280.46061837 + 360.98564736629 * j + 0.000387933 * jc2 - jc3 / 38710000.;
-        let sid_time = v0.cap_angle_360() + delta_psi * e_cos;
+        // Apparent sidereal time
+        let sid_time = v0.cap_angle_360() + delta_psi * e.cos();
 
         Self {
             dec,
@@ -453,7 +479,8 @@ impl Astro {
         }) / TEN_POW_EIGHT
     }
 
-    fn calc_psi_epsilon(elems: &[f64; 5], jc: f64) -> (f64, f64) {
+    fn calc_psi_eps(elems: &[f64; 5], jc: f64) -> (f64, f64) {
+        // Astronomical Algorithms pg. 144 (Nutations in longitude and obliquity)
         SIN_COEFFICIENT.iter().enumerate().fold(
             (0., 0.),
             |acc, (idx, (sc0, sc1, sc2, sc3, sc4))| {
@@ -469,9 +496,11 @@ impl Astro {
                     .enumerate()
                     .fold(0., |acc, (idx, xi)| acc + *xi * scs[idx]);
                 let xi_sum_rads = xi_sum.to_radians();
+                // Nutation in longitude
                 let psi = acc.0 + PE[idx].0 + jc * PE[idx].1 * xi_sum_rads.sin();
-                let epsilon = acc.1 + PE[idx].2 + jc * PE[idx].3 * xi_sum_rads.cos();
-                (psi, epsilon)
+                // Nutation in obliquity
+                let eps = acc.1 + PE[idx].2 + jc * PE[idx].3 * xi_sum_rads.cos();
+                (psi, eps)
             },
         )
     }
@@ -522,21 +551,27 @@ impl TopAstroDay {
         let mut astros = Vec::new();
 
         for astro in astro_day.astros.iter() {
+            // Astronomical Algorithms pg. 82
             let b_a = 0.99664719;
             let lat_rads = f64::from(coords.latitude).to_radians();
-            let tu = (b_a * lat_rads.tan()).atan();
+            let u = (b_a * lat_rads.tan()).atan();
             let elev = f64::from(coords.elevation);
-            let tcos = tu.cos() + elev / EARTH_RADIUS * lat_rads.cos();
-            let tsin = b_a * tu.sin() + elev / EARTH_RADIUS * lat_rads.sin();
-            let dec_cos = astro.dec.cos();
-            let sp_sin = (8.794 / (3600. * astro.rsum)).to_radians().sin();
-            let lhour_rads = (astro.sid_time + f64::from(coords.longitude) - astro.ra)
+            let p_sin_phi = b_a * u.sin() + elev / EARTH_RADIUS * lat_rads.sin();
+            let p_cos_phi = u.cos() + elev / EARTH_RADIUS * lat_rads.cos();
+            // Astronomical Algorithms pg. 279 (40.1)
+            let earth_dist = 3600. * astro.rsum;
+            let pi = (8.794 / earth_dist).to_radians();
+            let hours = (astro.sid_time + f64::from(coords.longitude) - astro.ra)
                 .cap_angle_360()
                 .to_radians();
-            let lhour_cos = lhour_rads.cos();
-            let dra = -tcos * sp_sin * lhour_rads.sin() / (dec_cos - tcos * sp_sin * lhour_cos);
-            let dec = (astro.dec.sin() - tsin * sp_sin) * dra.cos();
-            let dec = dec.atan2(dec_cos - tcos * sp_sin * lhour_cos).to_degrees();
+            // Astronomical Algorithms pg. 279 (40.2)
+            let dra = -p_cos_phi * pi.sin() * hours.sin();
+            let dra = dra.atan2(astro.dec.cos() - p_cos_phi * pi.sin() * hours.cos());
+            // Astronomical Algorithms pg. 279 (40.3)
+            let dec = (astro.dec.sin() - p_sin_phi * pi.sin()) * dra.cos();
+            let dec = dec
+                .atan2(astro.dec.cos() - p_cos_phi * pi.sin() * hours.cos())
+                .to_degrees();
 
             let top_astro = Astro {
                 ra: astro.ra + dra.to_degrees(),
