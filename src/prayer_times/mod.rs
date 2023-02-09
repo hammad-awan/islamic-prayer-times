@@ -18,7 +18,7 @@ use crate::{
 
 use self::{
     ext_lat::PrayerHour,
-    hours::to_time,
+    hours::hour_to_time,
     params::{Params, Weather},
 };
 
@@ -64,60 +64,39 @@ pub struct PrayerTime {
     pub extreme: bool,
 }
 
-pub fn get_prayer_times(
+pub fn times_dt_rng(
     params: &Params,
     location: Location,
     date_range: DateRange,
 ) -> HashMap<NaiveDate, HashMap<Prayer, Result<PrayerTime, ()>>> {
-    let weather = Weather::default();
-    let duration = date_range.end_date - date_range.start_date;
-    let days = (duration.num_days() + 1) as usize;
-    let mut prayer_times = HashMap::with_capacity(days);
+    let dur = date_range.end_date - date_range.start_date;
+    let days = (dur.num_days() + 1) as usize;
+    let mut times = HashMap::with_capacity(days);
     for date in date_range.start_date.iter_days().take(days) {
-        let prayer_time = daily_prayer_time(params, location, date, weather);
-        prayer_times.insert(date, prayer_time);
+        let prayer_time = times_dt(params, location, date, None);
+        times.insert(date, prayer_time);
     }
 
-    prayer_times
+    times
 }
 
-pub fn get_prayer_time(
+pub fn times_dt(
     params: &Params,
     location: Location,
     date: NaiveDate,
     weather: Option<Weather>,
 ) -> HashMap<Prayer, Result<PrayerTime, ()>> {
+    use Prayer::*;
+
     let weather = if let Some(weather) = weather {
         weather
     } else {
         Weather::default()
     };
 
-    daily_prayer_time(params, location, date, weather)
-}
-
-fn get_hours_adj_ext(
-    params: &Params,
-    top_astro_day: &TopAstroDay,
-    weather: Weather,
-) -> HashMap<Prayer, Result<PrayerHour, ()>> {
-    let hours = get_hours(params, &top_astro_day, weather);
-    adj_for_ext_lat(hours, params, &top_astro_day, weather)
-}
-
-fn daily_prayer_time(
-    params: &Params,
-    location: Location,
-    date: NaiveDate,
-    weather: Weather,
-) -> HashMap<Prayer, Result<PrayerTime, ()>> {
-    use Prayer::*;
-
     let julian_day = JulianDay::new(date, location.gmt);
     let top_astro_day = TopAstroDay::from_jd(julian_day, location.coords);
-
     let hours = get_hours_adj_ext(params, &top_astro_day, weather);
-
     let mut times = HashMap::from_iter(
         hours
             .iter()
@@ -127,6 +106,15 @@ fn daily_prayer_time(
     let imsaak = get_imsaak(params, &top_astro_day, weather);
     times.insert(Imsaak, imsaak);
     times
+}
+
+fn get_hours_adj_ext(
+    params: &Params,
+    top_astro_day: &TopAstroDay,
+    weather: Weather,
+) -> HashMap<Prayer, Result<PrayerHour, ()>> {
+    let hours = get_hours(params, &top_astro_day, weather);
+    adj_for_ext_lat(hours, params, &top_astro_day, weather)
 }
 
 fn get_imsaak(
@@ -144,7 +132,7 @@ fn get_imsaak(
             params.intervals[&Imsaak]
         };
     } else if params.intervals[&Imsaak] != 0. {
-        *params_adj.minute_offsets.get_mut(&Fajr).unwrap() -= params.intervals[&Imsaak];
+        *params_adj.min_offsets.get_mut(&Fajr).unwrap() -= params.intervals[&Imsaak];
     } else {
         *params_adj.angles.get_mut(&Fajr).unwrap() += params.angles[&Imsaak];
     }
@@ -153,8 +141,7 @@ fn get_imsaak(
     if let Ok(hour) = hours[&Fajr] {
         if hour.extreme {
             params_adj = params.clone();
-            *params_adj.minute_offsets.get_mut(&Fajr).unwrap() -= if params.intervals[&Imsaak] == 0.
-            {
+            *params_adj.min_offsets.get_mut(&Fajr).unwrap() -= if params.intervals[&Imsaak] == 0. {
                 DEF_IMSAAK_ANGLE
             } else {
                 params.intervals[&Imsaak]
@@ -169,7 +156,7 @@ fn get_imsaak(
 
 fn to_prayer_time(params: &Params, prayer: Prayer, prayer_hour: PrayerHour) -> PrayerTime {
     PrayerTime {
-        time: to_time(params, prayer, prayer_hour.value),
+        time: hour_to_time(params, prayer, prayer_hour.value),
         extreme: prayer_hour.extreme,
     }
 }

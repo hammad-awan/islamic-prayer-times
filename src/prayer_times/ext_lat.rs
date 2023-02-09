@@ -43,7 +43,7 @@ pub fn adj_for_ext_lat(
     use ExtremeLatitudeMethod::*;
     use Prayer::*;
 
-    if !can_adj(&hours, params.extreme_latitude) {
+    if !can_adj(&hours, params.ext_lat_method) {
         return HashMap::from_iter(
             hours
                 .iter()
@@ -57,7 +57,7 @@ pub fn adj_for_ext_lat(
             .map(|x| (*x.0, RefCell::new(x.1.map(|y| PrayerHour::new(y))))),
     );
 
-    match params.extreme_latitude {
+    match params.ext_lat_method {
         NearestLatitudeAllPrayersAlways
         | NearestLatitudeFajrIshaAlways
         | NearestLatitudeFajrIshaInvalid => adj_near_lat(&hours, params, top_astro_day, weather),
@@ -75,9 +75,9 @@ pub fn adj_for_ext_lat(
         _ => {}
     }
 
-    if params.extreme_latitude != MinutesFromMaghribFajrIshaInvalid
-        && params.extreme_latitude != HalfOfNightFajrIshaInvalid
-        && params.extreme_latitude != HalfOfNightFajrIshaAlways
+    if params.ext_lat_method != MinutesFromMaghribFajrIshaInvalid
+        && params.ext_lat_method != HalfOfNightFajrIshaInvalid
+        && params.ext_lat_method != HalfOfNightFajrIshaAlways
     {
         if params.intervals[&Fajr] != 0. {
             *hours[&Fajr].borrow_mut() = hours[&Shurooq].borrow().map(|mut x| {
@@ -97,6 +97,33 @@ pub fn adj_for_ext_lat(
     HashMap::from_iter(hours.iter().map(|x| (*x.0, x.1.borrow().map(|y| y))))
 }
 
+fn can_adj(
+    prayer_hours: &HashMap<Prayer, Result<f64, ()>>,
+    ext_lat_meth: ExtremeLatitudeMethod,
+) -> bool {
+    ext_lat_meth != ExtremeLatitudeMethod::None
+        && (has_inv_hours(prayer_hours) || is_always_ext_lat(ext_lat_meth))
+}
+
+fn has_inv_hours(prayer_hours: &HashMap<Prayer, Result<f64, ()>>) -> bool {
+    prayer_hours.into_iter().any(|x| x.1.is_err())
+}
+
+fn is_always_ext_lat(ext_lat_meth: ExtremeLatitudeMethod) -> bool {
+    use ExtremeLatitudeMethod::*;
+
+    match ext_lat_meth {
+        NearestLatitudeAllPrayersAlways
+        | NearestLatitudeFajrIshaAlways
+        | NearestGoodDayAllPrayersAlways
+        | SeventhOfNightFajrIshaAlways
+        | SeventhOfDayFajrIshaAlways
+        | HalfOfNightFajrIshaAlways
+        | MinutesFromMaghribFajrIshaAlways => true,
+        _ => false,
+    }
+}
+
 fn adj_near_lat(
     hours: &HashMap<Prayer, RefCell<Result<PrayerHour, ()>>>,
     params: &Params,
@@ -107,24 +134,24 @@ fn adj_near_lat(
     use Prayer::*;
 
     let mut coords = top_astro_day.coords;
-    coords.latitude = params.nearest_latitude;
+    coords.latitude = params.near_lat;
     let adj_top_astro_day = top_astro_day.new_coords(coords);
     let adj_hours = get_hours(params, &adj_top_astro_day, weather);
 
     if let Ok(adj_hour) = adj_hours[&Fajr] {
         let mut hours_res = hours[&Fajr].borrow_mut();
-        if params.extreme_latitude != NearestLatitudeFajrIshaInvalid || hours_res.is_err() {
+        if params.ext_lat_method != NearestLatitudeFajrIshaInvalid || hours_res.is_err() {
             *hours_res = Ok(PrayerHour::new_extreme(adj_hour));
         }
     }
     if let Ok(adj_hour) = adj_hours[&Isha] {
         let mut hours_res = hours[&Isha].borrow_mut();
-        if params.extreme_latitude != NearestLatitudeFajrIshaInvalid || hours_res.is_err() {
+        if params.ext_lat_method != NearestLatitudeFajrIshaInvalid || hours_res.is_err() {
             *hours_res = Ok(PrayerHour::new_extreme(adj_hour));
         }
     }
 
-    if params.extreme_latitude == NearestLatitudeAllPrayersAlways {
+    if params.ext_lat_method == NearestLatitudeAllPrayersAlways {
         *hours[&Shurooq].borrow_mut() =
             adj_hours[&Shurooq].map(|hour| PrayerHour::new_extreme(hour));
         hours[&Dhuhr].borrow_mut().as_mut().unwrap().extreme = true;
@@ -169,7 +196,7 @@ fn adj_near_good(
 
     if !adj_hours.is_empty() {
         let dhuhr_hour = adj_hours[&Dhuhr].unwrap();
-        if params.extreme_latitude == NearestGoodDayAllPrayersAlways {
+        if params.ext_lat_method == NearestGoodDayAllPrayersAlways {
             *hours[&Fajr].borrow_mut() = adj_hours[&Fajr].map(|hour| PrayerHour::new_extreme(hour));
             *hours[&Shurooq].borrow_mut() =
                 adj_hours[&Shurooq].map(|hour| PrayerHour::new_extreme(hour));
@@ -191,6 +218,23 @@ fn adj_near_good(
     }
 }
 
+fn test_fajr_isha(
+    params: &Params,
+    coords: Coordinates,
+    weather: Weather,
+    julian_day: JulianDay,
+) -> Option<HashMap<Prayer, Result<f64, ()>>> {
+    use Prayer::*;
+
+    let top_astro_day = TopAstroDay::from_jd(julian_day, coords);
+    let hours = get_hours(params, &top_astro_day, weather);
+    if hours[&Fajr].is_ok() && hours[&Isha].is_ok() {
+        Some(hours)
+    } else {
+        None
+    }
+}
+
 fn adj_sev_half(hours: &HashMap<Prayer, RefCell<Result<PrayerHour, ()>>>, params: &Params) {
     use ExtremeLatitudeMethod::*;
     use Prayer::*;
@@ -198,7 +242,7 @@ fn adj_sev_half(hours: &HashMap<Prayer, RefCell<Result<PrayerHour, ()>>>, params
     if hours[&Shurooq].borrow().is_ok() && hours[&Maghrib].borrow().is_ok() {
         let shur_hour = hours[&Shurooq].borrow().as_ref().unwrap().value;
         let magh_hour = hours[&Maghrib].borrow().as_ref().unwrap().value;
-        let portion = match params.extreme_latitude {
+        let portion = match params.ext_lat_method {
             SeventhOfNightFajrIshaAlways | SeventhOfNightFajrIshaInvalid => {
                 (24. - (magh_hour - shur_hour)) / 7.
             }
@@ -208,11 +252,11 @@ fn adj_sev_half(hours: &HashMap<Prayer, RefCell<Result<PrayerHour, ()>>>, params
             _ => (24. - (magh_hour - shur_hour)) * 0.5,
         };
 
-        match params.extreme_latitude {
+        match params.ext_lat_method {
             SeventhOfNightFajrIshaAlways
             | SeventhOfDayFajrIshaAlways
             | HalfOfNightFajrIshaAlways => {
-                if params.extreme_latitude == HalfOfNightFajrIshaAlways {
+                if params.ext_lat_method == HalfOfNightFajrIshaAlways {
                     *hours[&Fajr].borrow_mut() = Ok(PrayerHour::new_extreme(
                         portion - params.intervals[&Fajr] / 60.,
                     ));
@@ -226,7 +270,7 @@ fn adj_sev_half(hours: &HashMap<Prayer, RefCell<Result<PrayerHour, ()>>>, params
             }
             _ => {
                 if hours[&Fajr].borrow().is_err() {
-                    if params.extreme_latitude == HalfOfNightFajrIshaInvalid {
+                    if params.ext_lat_method == HalfOfNightFajrIshaInvalid {
                         *hours[&Fajr].borrow_mut() = Ok(PrayerHour::new_extreme(
                             portion - params.intervals[&Fajr] / 60.,
                         ));
@@ -236,7 +280,7 @@ fn adj_sev_half(hours: &HashMap<Prayer, RefCell<Result<PrayerHour, ()>>>, params
                     }
                 }
                 if hours[&Isha].borrow().is_err() {
-                    if params.extreme_latitude == HalfOfNightFajrIshaInvalid {
+                    if params.ext_lat_method == HalfOfNightFajrIshaInvalid {
                         *hours[&Isha].borrow_mut() = Ok(PrayerHour::new_extreme(
                             portion + params.intervals[&Isha] / 60.,
                         ));
@@ -279,49 +323,5 @@ fn adj_min_inv(hours: &HashMap<Prayer, RefCell<Result<PrayerHour, ()>>>, params:
             x.extreme = true;
             x
         });
-    }
-}
-
-fn test_fajr_isha(
-    params: &Params,
-    coords: Coordinates,
-    weather: Weather,
-    julian_day: JulianDay,
-) -> Option<HashMap<Prayer, Result<f64, ()>>> {
-    use Prayer::*;
-
-    let top_astro_day = TopAstroDay::from_jd(julian_day, coords);
-    let hours = get_hours(params, &top_astro_day, weather);
-    if hours[&Fajr].is_ok() && hours[&Isha].is_ok() {
-        Some(hours)
-    } else {
-        None
-    }
-}
-
-fn can_adj(
-    prayer_hours: &HashMap<Prayer, Result<f64, ()>>,
-    ext_lat_meth: ExtremeLatitudeMethod,
-) -> bool {
-    ext_lat_meth != ExtremeLatitudeMethod::None
-        && (has_inv_hours(prayer_hours) || is_always_ext_lat(ext_lat_meth))
-}
-
-fn has_inv_hours(prayer_hours: &HashMap<Prayer, Result<f64, ()>>) -> bool {
-    prayer_hours.into_iter().any(|x| x.1.is_err())
-}
-
-fn is_always_ext_lat(ext_lat_meth: ExtremeLatitudeMethod) -> bool {
-    use ExtremeLatitudeMethod::*;
-
-    match ext_lat_meth {
-        NearestLatitudeAllPrayersAlways
-        | NearestLatitudeFajrIshaAlways
-        | NearestGoodDayAllPrayersAlways
-        | SeventhOfNightFajrIshaAlways
-        | SeventhOfDayFajrIshaAlways
-        | HalfOfNightFajrIshaAlways
-        | MinutesFromMaghribFajrIshaAlways => true,
-        _ => false,
     }
 }

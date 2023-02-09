@@ -2,9 +2,8 @@ use chrono::{NaiveDate, NaiveTime};
 use islamic_prayer_times::{
     geo::coordinates::{Coordinates, Elevation, Gmt, Latitude, Longitude},
     prayer_times::{
-        get_prayer_time,
         params::{ExtremeLatitudeMethod, Method, Params},
-        DateRange, Prayer, {get_prayer_times, Location},
+        times_dt, DateRange, Prayer, {times_dt_rng, Location},
     },
 };
 
@@ -24,7 +23,7 @@ fn test_potomac_md() {
     let date_range = DateRange::new(start_date, end_date).unwrap();
 
     // Act
-    let pts_by_day = get_prayer_times(&params, location, date_range);
+    let pts_by_day = times_dt_rng(&params, location, date_range);
 
     // Assert
     assert_eq!(3, pts_by_day.len());
@@ -69,7 +68,7 @@ fn test_juneau_ak_default_params() {
     let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 
     // Act
-    let pts = get_prayer_time(&params, location, date, None);
+    let pts = times_dt(&params, location, date, None);
 
     // Assert
     let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
@@ -99,7 +98,7 @@ fn test_juneau_ak_default_params() {
 fn test_juneau_ak_default_params_near_lat_all_prayers_always() {
     // Arrange
     let mut params = Params::new(Method::Isna);
-    params.extreme_latitude = ExtremeLatitudeMethod::NearestLatitudeAllPrayersAlways;
+    params.ext_lat_method = ExtremeLatitudeMethod::NearestLatitudeAllPrayersAlways;
     let latitude = Latitude::new(58.3019444).unwrap();
     let longitude = Longitude::new(-134.4197222).unwrap();
     let elevation = Elevation::new(87.).unwrap();
@@ -109,7 +108,7 @@ fn test_juneau_ak_default_params_near_lat_all_prayers_always() {
     let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 
     // Act
-    let pts = get_prayer_time(&params, location, date, None);
+    let pts = times_dt(&params, location, date, None);
 
     // Assert
     let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
@@ -139,7 +138,7 @@ fn test_juneau_ak_default_params_near_lat_all_prayers_always() {
 fn test_juneau_ak_default_params_near_lat_fajr_isha_always() {
     // Arrange
     let mut params = Params::new(Method::Isna);
-    params.extreme_latitude = ExtremeLatitudeMethod::NearestLatitudeFajrIshaAlways;
+    params.ext_lat_method = ExtremeLatitudeMethod::NearestLatitudeFajrIshaAlways;
     let latitude = Latitude::new(58.3019444).unwrap();
     let longitude = Longitude::new(-134.4197222).unwrap();
     let elevation = Elevation::new(87.).unwrap();
@@ -149,7 +148,7 @@ fn test_juneau_ak_default_params_near_lat_fajr_isha_always() {
     let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 
     // Act
-    let pts = get_prayer_time(&params, location, date, None);
+    let pts = times_dt(&params, location, date, None);
 
     // Assert
     let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
@@ -179,7 +178,7 @@ fn test_juneau_ak_default_params_near_lat_fajr_isha_always() {
 fn test_juneau_ak_default_params_near_lat_fajr_isha_inv() {
     // Arrange
     let mut params = Params::new(Method::Isna);
-    params.extreme_latitude = ExtremeLatitudeMethod::NearestLatitudeFajrIshaInvalid;
+    params.ext_lat_method = ExtremeLatitudeMethod::NearestLatitudeFajrIshaInvalid;
     let latitude = Latitude::new(58.3019444).unwrap();
     let longitude = Longitude::new(-134.4197222).unwrap();
     let elevation = Elevation::new(87.).unwrap();
@@ -189,7 +188,7 @@ fn test_juneau_ak_default_params_near_lat_fajr_isha_inv() {
     let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 
     // Act
-    let pts = get_prayer_time(&params, location, date, None);
+    let pts = times_dt(&params, location, date, None);
 
     // Assert
     let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
@@ -219,7 +218,7 @@ fn test_juneau_ak_default_params_near_lat_fajr_isha_inv() {
 fn test_juneau_ak_default_params_near_good_day_all_prayers_always() {
     // Arrange
     let mut params = Params::new(Method::Isna);
-    params.extreme_latitude = ExtremeLatitudeMethod::NearestGoodDayAllPrayersAlways;
+    params.ext_lat_method = ExtremeLatitudeMethod::NearestGoodDayAllPrayersAlways;
     let latitude = Latitude::new(58.3019444).unwrap();
     let longitude = Longitude::new(-134.4197222).unwrap();
     let elevation = Elevation::new(87.).unwrap();
@@ -229,7 +228,7 @@ fn test_juneau_ak_default_params_near_good_day_all_prayers_always() {
     let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 
     // Act
-    let pts = get_prayer_time(&params, location, date, None);
+    let pts = times_dt(&params, location, date, None);
 
     // Assert
     let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
@@ -268,7 +267,7 @@ fn test_peurto_williams_cl_default_params() {
     let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 
     // Act
-    let pts = get_prayer_time(&params, location, date, None);
+    let pts = times_dt(&params, location, date, None);
 
     // Assert
     let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();

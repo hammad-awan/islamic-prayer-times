@@ -53,13 +53,13 @@ pub enum AsrShadowRatio {
 #[derive(Debug, Clone)]
 pub struct Params {
     pub method: Method,
-    pub nearest_latitude: Latitude,
+    pub near_lat: Latitude,
     pub round_seconds: RoundSeconds,
     pub asr_shadow_ratio: AsrShadowRatio,
-    pub extreme_latitude: ExtremeLatitudeMethod,
+    pub ext_lat_method: ExtremeLatitudeMethod,
     pub angles: HashMap<Prayer, f64>,
     pub intervals: HashMap<Prayer, f64>,
-    pub minute_offsets: HashMap<Prayer, f64>,
+    pub min_offsets: HashMap<Prayer, f64>,
 }
 
 impl Params {
@@ -69,6 +69,7 @@ impl Params {
         use RoundSeconds::*;
 
         let mut asr_shadow_ratio = AsrShadowRatio::Shafi;
+
         let mut angles = HashMap::new();
         angles.insert(Imsaak, DEF_IMSAAK_ANGLE);
 
@@ -77,14 +78,14 @@ impl Params {
         intervals.insert(Imsaak, 0.);
         intervals.insert(Isha, 0.);
 
-        let mut minute_offsets = HashMap::new();
-        minute_offsets.insert(Fajr, 0.);
-        minute_offsets.insert(Shurooq, 0.);
-        minute_offsets.insert(Dhuhr, 0.);
-        minute_offsets.insert(Asr, 0.);
-        minute_offsets.insert(Maghrib, 0.);
-        minute_offsets.insert(Isha, 0.);
-        minute_offsets.insert(Imsaak, 0.);
+        let mut min_offsets = HashMap::new();
+        min_offsets.insert(Fajr, 0.);
+        min_offsets.insert(Shurooq, 0.);
+        min_offsets.insert(Dhuhr, 0.);
+        min_offsets.insert(Asr, 0.);
+        min_offsets.insert(Maghrib, 0.);
+        min_offsets.insert(Isha, 0.);
+        min_offsets.insert(Imsaak, 0.);
 
         match method {
             Method::None => {
@@ -126,13 +127,13 @@ impl Params {
 
         Self {
             method,
-            nearest_latitude: Latitude::new(48.5).unwrap(),
+            near_lat: Latitude::new(48.5).unwrap(),
             round_seconds: SpecialRounding,
             asr_shadow_ratio,
-            extreme_latitude: ExtremeLatitudeMethod::NearestGoodDayFajrIshaInvalid,
+            ext_lat_method: ExtremeLatitudeMethod::NearestGoodDayFajrIshaInvalid,
             angles,
             intervals,
-            minute_offsets,
+            min_offsets,
         }
     }
 }
@@ -148,8 +149,11 @@ pub struct Pressure(f64);
 
 impl Pressure {
     pub fn new(pressure: f64) -> Result<Self, ()> {
-        // TODO: Add invariant.
-        Ok(Self(pressure))
+        if pressure < 100. || pressure > 1050. {
+            Err(())
+        } else {
+            Ok(Self(pressure))
+        }
     }
 }
 
@@ -164,8 +168,11 @@ pub struct Temperature(f64);
 
 impl Temperature {
     pub fn new(temperature: f64) -> Result<Self, ()> {
-        // TODO: Add invariant.
-        Ok(Self(temperature))
+        if temperature < -90. || temperature > 57. {
+            Err(())
+        } else {
+            Ok(Self(temperature))
+        }
     }
 }
 
@@ -185,7 +192,7 @@ impl Default for Weather {
     fn default() -> Self {
         Self {
             pressure: Pressure::new(1010.).unwrap(),
-            temperature: Temperature::new(10.).unwrap(),
+            temperature: Temperature::new(14.).unwrap(),
         }
     }
 }
