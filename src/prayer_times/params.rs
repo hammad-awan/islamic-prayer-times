@@ -4,6 +4,9 @@ use crate::geo::coordinates::Latitude;
 
 use super::Prayer;
 
+pub const DEF_IMSAAK_ANGLE: f64 = 1.5;
+
+#[derive(Debug, Clone, Copy)]
 pub enum Method {
     None,
     Egyptian,
@@ -47,6 +50,7 @@ pub enum AsrShadowRatio {
     Hanafi,
 }
 
+#[derive(Debug, Clone)]
 pub struct Params {
     pub method: Method,
     pub nearest_latitude: Latitude,
@@ -66,7 +70,7 @@ impl Params {
 
         let mut asr_shadow_ratio = AsrShadowRatio::Shafi;
         let mut angles = HashMap::new();
-        angles.insert(Imsaak, 1.5);
+        angles.insert(Imsaak, DEF_IMSAAK_ANGLE);
 
         let mut intervals = angles.clone();
         intervals.insert(Fajr, 0.);

@@ -33,6 +33,9 @@ fn test_potomac_md() {
     assert_eq!(true, pts_by_day.contains_key(&end_date));
 
     let pts = pts_by_day.get(&start_date).unwrap();
+    let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(5, 48, 0).unwrap(), imsaak.time);
+    assert_eq!(false, imsaak.extreme);
     let fajr = pts.get(&Prayer::Fajr).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(5, 56, 0).unwrap(), fajr.time);
     assert_eq!(false, fajr.extreme);
@@ -69,6 +72,9 @@ fn test_juneau_ak_default_params() {
     let pts = get_prayer_time(&params, location, date, None);
 
     // Assert
+    let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(5, 47, 0).unwrap(), imsaak.time);
+    assert_eq!(false, imsaak.extreme);
     let fajr = pts.get(&Prayer::Fajr).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(5, 58, 0).unwrap(), fajr.time);
     assert_eq!(false, fajr.extreme);
@@ -106,6 +112,9 @@ fn test_juneau_ak_default_params_near_lat_all_prayers_always() {
     let pts = get_prayer_time(&params, location, date, None);
 
     // Assert
+    let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(5, 50, 0).unwrap(), imsaak.time);
+    assert_eq!(true, imsaak.extreme);
     let fajr = pts.get(&Prayer::Fajr).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(5, 51, 0).unwrap(), fajr.time);
     assert_eq!(true, fajr.extreme);
@@ -143,6 +152,9 @@ fn test_juneau_ak_default_params_near_lat_fajr_isha_always() {
     let pts = get_prayer_time(&params, location, date, None);
 
     // Assert
+    let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(5, 50, 0).unwrap(), imsaak.time);
+    assert_eq!(true, imsaak.extreme);
     let fajr = pts.get(&Prayer::Fajr).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(5, 51, 0).unwrap(), fajr.time);
     assert_eq!(true, fajr.extreme);
@@ -180,6 +192,9 @@ fn test_juneau_ak_default_params_near_lat_fajr_isha_inv() {
     let pts = get_prayer_time(&params, location, date, None);
 
     // Assert
+    let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(5, 47, 0).unwrap(), imsaak.time);
+    assert_eq!(false, imsaak.extreme);
     let fajr = pts.get(&Prayer::Fajr).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(5, 58, 0).unwrap(), fajr.time);
     assert_eq!(false, fajr.extreme);
@@ -217,6 +232,9 @@ fn test_juneau_ak_default_params_near_good_day_all_prayers_always() {
     let pts = get_prayer_time(&params, location, date, None);
 
     // Assert
+    let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(5, 57, 0).unwrap(), imsaak.time);
+    assert_eq!(true, imsaak.extreme);
     let fajr = pts.get(&Prayer::Fajr).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(5, 58, 0).unwrap(), fajr.time);
     assert_eq!(true, fajr.extreme);
@@ -253,6 +271,9 @@ fn test_peurto_williams_cl_default_params() {
     let pts = get_prayer_time(&params, location, date, None);
 
     // Assert
+    let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(3, 20, 0).unwrap(), imsaak.time);
+    assert_eq!(false, imsaak.extreme);
     let fajr = pts.get(&Prayer::Fajr).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(3, 43, 0).unwrap(), fajr.time);
     assert_eq!(false, fajr.extreme);

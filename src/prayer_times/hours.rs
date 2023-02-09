@@ -28,7 +28,7 @@ pub fn get_hours(
 
     let (shur_hour_res, dhuhr_hour, magh_hour_res) = get_shur_dhuhr_magh(top_astro_day, weather);
 
-    let (fajr_hour_res, isha_hour_res) = get_fajr_isha(top_astro_day, params, dhuhr_hour);
+    let (fajr_hour_res, isha_hour_res) = get_fajr_isha(params, top_astro_day, dhuhr_hour);
 
     let asr_hour_res = get_asr(top_astro_day, params.asr_shadow_ratio, dhuhr_hour);
 
@@ -39,11 +39,10 @@ pub fn get_hours(
     hours.insert(Asr, asr_hour_res);
     hours.insert(Maghrib, magh_hour_res);
     hours.insert(Isha, isha_hour_res);
-
     hours
 }
 
-pub fn to_time(params: &Params, hour: f64, prayer: Prayer) -> NaiveTime {
+pub fn to_time(params: &Params, prayer: Prayer, hour: f64) -> NaiveTime {
     use Prayer::*;
     use RoundSeconds::*;
 
@@ -92,8 +91,8 @@ fn adj_time(hour: &mut f64, min: &mut f64, sec: &mut f64, sec_cap: f64) {
 }
 
 fn get_fajr_isha(
-    top_astro_day: &TopAstroDay,
     params: &Params,
+    top_astro_day: &TopAstroDay,
     dhuhr_hour: f64,
 ) -> (Result<f64, ()>, Result<f64, ()>) {
     use Prayer::*;
@@ -231,6 +230,7 @@ fn get_refraction(weather: Weather, sun_alt: f64) -> f64 {
 }
 
 fn get_shur_magh_m_0_adj(top_astro_day: &TopAstroDay) -> Result<f64, ()> {
+    // Astronomical Algorithms pg. 102 (15.1)
     let lat_rads = f64::from(top_astro_day.coords.latitude).to_radians();
     let dec_rads = top_astro_day.astro().dec.to_radians();
     let n = CENTER_OF_SUN_ANGLE.to_radians().sin() - lat_rads.sin() * dec_rads.sin();
@@ -240,6 +240,7 @@ fn get_shur_magh_m_0_adj(top_astro_day: &TopAstroDay) -> Result<f64, ()> {
         return Err(());
     }
 
+    // Astronomical Algorithms pg. 102 (15.2)
     let adj = r.acos().to_degrees().cap_angle_180() / DEGREES_IN_CIRCLE;
     Ok(adj)
 }
