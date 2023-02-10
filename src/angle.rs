@@ -1,5 +1,7 @@
 use std::ops::{Add, Div, Mul, Sub};
 
+pub const DEG_IN_CIRCLE: f64 = 360.;
+
 pub trait CanFloor {
     fn floor(self) -> Self;
 }
@@ -31,12 +33,12 @@ where
 
     /// Caps angle between 0 and 360 degrees.
     fn cap_angle_360(self) -> Self {
-        self.cap_angle(Self::from(360.))
+        self.cap_angle(Self::from(DEG_IN_CIRCLE))
     }
 
     /// Caps an angle between 0 and 180 degrees.
     fn cap_angle_180(self) -> Self {
-        self.cap_angle(Self::from(180.))
+        self.cap_angle(Self::from(DEG_IN_CIRCLE / 2.))
     }
 
     // Caps an angle between 0 and cap degrees.
@@ -51,12 +53,12 @@ where
 
     // Caps an angle between -180 and 180 degrees.
     fn cap_angle_between_180(self) -> Self {
-        let val = self / Self::from(360.);
-        let val = (val - val.floor()) * Self::from(360.);
-        if val < Self::from(-180.) {
-            val + Self::from(360.)
-        } else if val > Self::from(180.) {
-            val - Self::from(360.)
+        let val = self / Self::from(DEG_IN_CIRCLE);
+        let val = (val - val.floor()) * Self::from(DEG_IN_CIRCLE);
+        if val < Self::from(-DEG_IN_CIRCLE / 2.) {
+            val + Self::from(DEG_IN_CIRCLE)
+        } else if val > Self::from(DEG_IN_CIRCLE / 2.) {
+            val - Self::from(DEG_IN_CIRCLE)
         } else {
             val
         }

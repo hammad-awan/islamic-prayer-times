@@ -5,7 +5,7 @@ use super::coordinates::Coordinates;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Qibla {
     coords: Coordinates,
-    angle: f64,
+    degrees: f64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -30,23 +30,22 @@ impl Qibla {
 
     pub fn new(coords: Coordinates) -> Self {
         let lat_rads = f64::from(coords.latitude).to_radians();
-        let x = f64::from(coords.longitude).to_radians() - Qibla::KAABA_LONGITUDE.to_radians();
-        let y =
-            lat_rads.cos() * Qibla::KAABA_LATITUDE.to_radians().tan() - lat_rads.sin() * x.cos();
-        let angle = x.sin().atan2(y).to_degrees();
-        Self { coords, angle }
+        let x = f64::from(coords.longitude).to_radians() - Self::KAABA_LONGITUDE.to_radians();
+        let y = lat_rads.cos() * Self::KAABA_LATITUDE.to_radians().tan() - lat_rads.sin() * x.cos();
+        let degrees = x.sin().atan2(y).to_degrees();
+        Self { coords, degrees }
     }
 
     pub fn coords(&self) -> Coordinates {
         self.coords
     }
 
-    pub fn angle(&self) -> f64 {
-        self.angle
+    pub fn degrees(&self) -> f64 {
+        self.degrees
     }
 
     pub fn rotation(&self) -> Rotation {
-        if self.angle < 0. {
+        if self.degrees < 0. {
             Rotation::Cw
         } else {
             Rotation::Ccw
@@ -56,6 +55,6 @@ impl Qibla {
 
 impl Display for Qibla {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.1}° {}", self.angle.abs(), self.rotation())
+        write!(f, "{:.1}° {}", self.degrees.abs(), self.rotation())
     }
 }

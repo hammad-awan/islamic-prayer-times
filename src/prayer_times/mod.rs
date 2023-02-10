@@ -13,7 +13,7 @@ use crate::{
         coordinates::{Coordinates, Gmt},
         julian_day::JulianDay,
     },
-    prayer_times::{ext_lat::adj_for_ext_lat, hours::get_hours, params::DEF_IMSAAK_ANGLE},
+    prayer_times::{ext_lat::adj_for_ext_lat, hours::get_hours},
 };
 
 use self::{
@@ -127,7 +127,7 @@ fn get_imsaak(
     let mut params_adj = params.clone();
     if params.intervals[&Fajr] != 0. {
         *params_adj.intervals.get_mut(&Fajr).unwrap() += if params.intervals[&Imsaak] == 0. {
-            DEF_IMSAAK_ANGLE
+            Params::DEF_IMSAAK_ANGLE
         } else {
             params.intervals[&Imsaak]
         };
@@ -142,7 +142,7 @@ fn get_imsaak(
         if hour.extreme {
             params_adj = params.clone();
             *params_adj.min_offsets.get_mut(&Fajr).unwrap() -= if params.intervals[&Imsaak] == 0. {
-                DEF_IMSAAK_ANGLE
+                Params::DEF_IMSAAK_ANGLE
             } else {
                 params.intervals[&Imsaak]
             };

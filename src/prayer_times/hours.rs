@@ -3,7 +3,7 @@ use std::{collections::HashMap, ops::Rem};
 use chrono::NaiveTime;
 
 use crate::{
-    angle::LimitAngle,
+    angle::{LimitAngle, DEG_IN_CIRCLE},
     geo::astro::TopAstroDay,
     prayer_times::params::{Params, RoundSeconds},
 };
@@ -13,7 +13,6 @@ use super::{params::Weather, Prayer};
 const DEGREES_TO_10_BASE: f64 = 0.066666666666666666;
 const INVALID_TRIGGER: f64 = 1.;
 const CENTER_OF_SUN_ANGLE: f64 = -0.83337;
-const DEGREES_IN_CIRCLE: f64 = 360.;
 const DEF_ROUND_SEC: f64 = 30.;
 const AGGRESSIVE_ROUND_SEC: f64 = 1.;
 const MIN_SECS_PER_HR_MIN: f64 = 60.;
@@ -50,10 +49,10 @@ fn get_shur_dhuhr_magh(
     let m_0 = (top_astro_day.astro().ra
         - f64::from(top_astro_day.coords.longitude)
         - top_astro_day.astro().sid_time)
-        / DEGREES_IN_CIRCLE;
+        / DEG_IN_CIRCLE;
     let dhuhr_m_time = m_0.cap_angle_1();
     let dhuhr_hour_angle = get_hour_angle(top_astro_day, ra_interp_deltas, dhuhr_m_time);
-    let dhuhr_delta_m = dhuhr_hour_angle / DEGREES_IN_CIRCLE;
+    let dhuhr_delta_m = dhuhr_hour_angle / DEG_IN_CIRCLE;
     let dhuhr_hour = HRS_PER_DAY * (dhuhr_m_time - dhuhr_delta_m);
 
     let shur_magh_res = if let Ok(sm_m_0_adj) = get_shur_magh_m_0_adj(top_astro_day) {
@@ -93,7 +92,7 @@ fn get_ra_interp_deltas(top_astro_day: &TopAstroDay) -> (f64, f64) {
     let j = 350.;
     let k = 10.;
     if top_astro_day.astro().ra > j && next_ra < k {
-        next_ra += DEGREES_IN_CIRCLE;
+        next_ra += DEG_IN_CIRCLE;
     }
     if prev_ra > j && top_astro_day.astro().ra < k {
         prev_ra = 0.;
@@ -131,7 +130,7 @@ fn get_shur_magh_m_0_adj(top_astro_day: &TopAstroDay) -> Result<f64, ()> {
     }
 
     // Astronomical Algorithms pg. 102 (15.2)
-    let adj = r.acos().to_degrees().cap_angle_180() / DEGREES_IN_CIRCLE;
+    let adj = r.acos().to_degrees().cap_angle_180() / DEG_IN_CIRCLE;
     Ok(adj)
 }
 
@@ -158,7 +157,7 @@ fn get_shur_magh(
     sun_alt += get_refraction(weather, sun_alt);
     // Astronomical Algorithms pg. 103
     let delta_m = (sun_alt - CENTER_OF_SUN_ANGLE)
-        / (DEGREES_IN_CIRCLE * dec_interp_rads.cos() * lat_rads.cos() * hour_angle_rads.sin());
+        / (DEG_IN_CIRCLE * dec_interp_rads.cos() * lat_rads.cos() * hour_angle_rads.sin());
     HRS_PER_DAY * (m_time + delta_m)
 }
 

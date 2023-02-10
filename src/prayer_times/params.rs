@@ -4,8 +4,6 @@ use crate::geo::coordinates::Latitude;
 
 use super::Prayer;
 
-pub const DEF_IMSAAK_ANGLE: f64 = 1.5;
-
 #[derive(Debug, Clone, Copy)]
 pub enum Method {
     None,
@@ -63,6 +61,8 @@ pub struct Params {
 }
 
 impl Params {
+    pub const DEF_IMSAAK_ANGLE: f64 = 1.5;
+
     pub fn new(method: Method) -> Self {
         use Method::*;
         use Prayer::*;
@@ -71,7 +71,7 @@ impl Params {
         let mut asr_shadow_ratio = AsrShadowRatio::Shafi;
 
         let mut angles = HashMap::new();
-        angles.insert(Imsaak, DEF_IMSAAK_ANGLE);
+        angles.insert(Imsaak, Self::DEF_IMSAAK_ANGLE);
 
         let mut intervals = angles.clone();
         intervals.insert(Fajr, 0.);

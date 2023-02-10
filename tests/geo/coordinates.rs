@@ -4,112 +4,118 @@ use islamic_prayer_times::geo::coordinates::*;
 fn should_new_positive_latitude() {
     // Arrange
     // Act
-    let result = Latitude::new(45.);
+    let lat = Latitude::new(45.);
     // Assert
-    assert!(result.is_ok());
-    assert_eq!(Direction::North, result.unwrap().direction());
+    assert!(lat.is_ok());
+    assert_eq!(45., f64::from(lat.unwrap()));
+    assert_eq!(Direction::North, lat.unwrap().direction());
 }
 
 #[test]
 fn should_new_negative_latitude() {
     // Arrange
     // Act
-    let result = Latitude::new(-45.);
+    let lat = Latitude::new(-45.);
     // Assert
-    assert!(result.is_ok());
-    assert_eq!(Direction::South, result.unwrap().direction());
+    assert!(lat.is_ok());
+    assert_eq!(-45., f64::from(lat.unwrap()));
+    assert_eq!(Direction::South, lat.unwrap().direction());
 }
 
 #[test]
 fn should_fail_new_when_latitude_gt_90() {
     // Arrange
     // Act
-    let result = Latitude::new(90.3);
+    let lat = Latitude::new(90.3);
     // Assert
-    assert!(result.is_err());
+    assert!(lat.is_err());
 }
 
 #[test]
 fn should_fail_new_when_latitude_lt_negative_90() {
     // Arrange
     // Act
-    let result = Latitude::new(-90.3);
+    let lat = Latitude::new(-90.3);
     // Assert
-    assert!(result.is_err());
+    assert!(lat.is_err());
 }
 
 #[test]
 fn should_new_positive_longitude() {
     // Arrange
     // Act
-    let result = Longitude::new(120.);
+    let lon = Longitude::new(120.);
     // Assert
-    assert!(result.is_ok());
-    assert_eq!(Direction::East, result.unwrap().direction());
+    assert!(lon.is_ok());
+    assert_eq!(120., f64::from(lon.unwrap()));
+    assert_eq!(Direction::East, lon.unwrap().direction());
 }
 
 #[test]
 fn should_new_negative_longitude() {
     // Arrange
     // Act
-    let result = Longitude::new(-120.);
+    let lon = Longitude::new(-120.);
     // Assert
-    assert!(result.is_ok());
-    assert_eq!(Direction::West, result.unwrap().direction());
+    assert!(lon.is_ok());
+    assert_eq!(-120., f64::from(lon.unwrap()));
+    assert_eq!(Direction::West, lon.unwrap().direction());
 }
 
 #[test]
 fn should_fail_new_when_longitude_gt_180() {
     // Arrange
     // Act
-    let result = Longitude::new(180.3);
+    let lon = Longitude::new(180.3);
     // Assert
-    assert!(result.is_err());
+    assert!(lon.is_err());
 }
 
 #[test]
 fn should_fail_new_when_longitude_lt_negative_180() {
     // Arrange
     // Act
-    let result = Longitude::new(-180.3);
+    let lon = Longitude::new(-180.3);
     // Assert
-    assert!(result.is_err());
+    assert!(lon.is_err());
 }
 
 #[test]
 fn should_new_positive_elevation() {
     // Arrange
     // Act
-    let result = Elevation::new(Elevation::MAX - 1.);
+    let elev = Elevation::new(Elevation::MAX - 1.);
     // Assert
-    assert!(result.is_ok());
+    assert!(elev.is_ok());
+    assert_eq!(Elevation::MAX - 1., f64::from(elev.unwrap()));
 }
 
 #[test]
 fn should_new_negative_elevation() {
     // Arrange
     // Act
-    let result = Elevation::new(Elevation::MIN + 1.);
+    let elev = Elevation::new(Elevation::MIN + 1.);
     // Assert
-    assert!(result.is_ok());
+    assert!(elev.is_ok());
+    assert_eq!(Elevation::MIN + 1., f64::from(elev.unwrap()));
 }
 
 #[test]
 fn should_fail_new_when_elevation_too_high() {
     // Arrange
     // Act
-    let result = Elevation::new(Elevation::MAX + 1.);
+    let elev = Elevation::new(Elevation::MAX + 1.);
     // Assert
-    assert!(result.is_err());
+    assert!(elev.is_err());
 }
 
 #[test]
 fn should_fail_new_when_elevation_too_low() {
     // Arrange
     // Act
-    let result = Elevation::new(Elevation::MIN - 1.);
+    let elev = Elevation::new(Elevation::MIN - 1.);
     // Assert
-    assert!(result.is_err());
+    assert!(elev.is_err());
 }
 
 #[test]
