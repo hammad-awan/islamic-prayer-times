@@ -133,7 +133,7 @@ fn adj_near_lat(
     use ExtremeLatitudeMethod::*;
     use Prayer::*;
 
-    let mut coords = top_astro_day.coords;
+    let mut coords = top_astro_day.coords();
     coords.latitude = params.near_lat;
     let adj_top_astro_day = top_astro_day.new_coords(coords);
     let adj_hours = get_hours(params, &adj_top_astro_day, weather);
@@ -175,7 +175,7 @@ fn adj_near_good(
     for i in 0..=julian_day.date.ordinal() {
         if let Some(x) = test_fajr_isha(
             params,
-            top_astro_day.coords,
+            top_astro_day.coords(),
             weather,
             julian_day.sub(i as u64),
         ) {
@@ -185,7 +185,7 @@ fn adj_near_good(
 
         if let Some(x) = test_fajr_isha(
             params,
-            top_astro_day.coords,
+            top_astro_day.coords(),
             weather,
             julian_day.add(i as u64),
         ) {

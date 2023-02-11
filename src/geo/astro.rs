@@ -4,11 +4,11 @@ use super::{coordinates::Coordinates, julian_day::JulianDay};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Astro {
-    pub dra: f64,      // Delta Right Ascension
-    pub dec: f64,      // Declination
-    pub ra: f64,       // Right Ascension
-    pub rsum: f64,     // Sum of periodic values for radius vector R
-    pub sid_time: f64, // Sidereal time
+    dra: f64,      // Delta Right Ascension
+    dec: f64,      // Declination
+    ra: f64,       // Right Ascension
+    rsum: f64,     // Sum of periodic values for radius vector R
+    sid_time: f64, // Sidereal time
 }
 
 impl Astro {
@@ -385,6 +385,22 @@ impl Astro {
         (2, -1, 0, 2, 2),
     ];
 
+    pub fn dra(&self) -> f64 {
+        self.dra
+    }
+
+    pub fn dec(&self) -> f64 {
+        self.dec
+    }
+
+    pub fn ra(&self) -> f64 {
+        self.ra
+    }
+
+    pub fn sid_time(&self) -> f64 {
+        self.sid_time
+    }
+
     fn new(julian_day: f64) -> Self {
         // Astronomical Algorithms (AA) pg. 143-148
         let j = julian_day - 2451545.;
@@ -543,7 +559,7 @@ impl AstroDay {
 #[derive(Debug, Clone)]
 pub struct TopAstroDay {
     astro_day: AstroDay,
-    pub coords: Coordinates,
+    coords: Coordinates,
     astros: Vec<Astro>,
 }
 
@@ -600,6 +616,10 @@ impl TopAstroDay {
 
     pub fn new_coords(&self, coords: Coordinates) -> Self {
         Self::from_ad(self.astro_day.clone(), coords)
+    }
+
+    pub fn coords(&self) -> Coordinates {
+        self.coords
     }
 
     pub fn astro(&self) -> &Astro {
