@@ -64,7 +64,7 @@ pub struct PrayerTime {
     pub extreme: bool,
 }
 
-pub fn times_dt_rng(
+pub fn prayer_times_dt_rng(
     params: &Params,
     location: Location,
     date_range: DateRange,
@@ -73,14 +73,14 @@ pub fn times_dt_rng(
     let days = (dur.num_days() + 1) as usize;
     let mut times = HashMap::with_capacity(days);
     for date in date_range.start_date.iter_days().take(days) {
-        let prayer_time = times_dt(params, location, date, None);
+        let prayer_time = prayer_times_dt(params, location, date, None);
         times.insert(date, prayer_time);
     }
 
     times
 }
 
-pub fn times_dt(
+pub fn prayer_times_dt(
     params: &Params,
     location: Location,
     date: NaiveDate,
@@ -114,7 +114,7 @@ fn get_hours_adj_ext(
     weather: Weather,
 ) -> HashMap<Prayer, Result<PrayerHour, ()>> {
     let hours = get_hours(params, &top_astro_day, weather);
-    adj_for_ext_lat(hours, params, &top_astro_day, weather)
+    adj_for_ext_lat(params, hours, &top_astro_day, weather)
 }
 
 fn get_imsaak(

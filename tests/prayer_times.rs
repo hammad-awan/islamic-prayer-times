@@ -3,7 +3,7 @@ use islamic_prayer_times::{
     geo::coordinates::{Coordinates, Elevation, Gmt, Latitude, Longitude},
     prayer_times::{
         params::{ExtremeLatitudeMethod, Method, Params},
-        times_dt, DateRange, Prayer, {times_dt_rng, Location},
+        prayer_times_dt, prayer_times_dt_rng, DateRange, Location, Prayer,
     },
 };
 
@@ -23,7 +23,7 @@ fn test_potomac_md() {
     let date_range = DateRange::new(start_date, end_date).unwrap();
 
     // Act
-    let pts_by_day = times_dt_rng(&params, location, date_range);
+    let pts_by_day = prayer_times_dt_rng(&params, location, date_range);
 
     // Assert
     assert_eq!(3, pts_by_day.len());
@@ -53,6 +53,52 @@ fn test_potomac_md() {
     let isha = pts.get(&Prayer::Isha).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(18, 50, 0).unwrap(), isha.time);
     assert_eq!(false, isha.extreme);
+
+    let pts = pts_by_day.get(&middle_date).unwrap();
+    let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(5, 47, 0).unwrap(), imsaak.time);
+    assert_eq!(false, imsaak.extreme);
+    let fajr = pts.get(&Prayer::Fajr).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(5, 55, 0).unwrap(), fajr.time);
+    assert_eq!(false, fajr.extreme);
+    let shurooq = pts.get(&Prayer::Shurooq).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(7, 9, 0).unwrap(), shurooq.time);
+    assert_eq!(false, shurooq.extreme);
+    let dhuhr = pts.get(&Prayer::Dhuhr).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(12, 23, 0).unwrap(), dhuhr.time);
+    assert_eq!(false, dhuhr.extreme);
+    let asr = pts.get(&Prayer::Asr).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(15, 13, 0).unwrap(), asr.time);
+    assert_eq!(false, asr.extreme);
+    let maghrib = pts.get(&Prayer::Maghrib).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(17, 37, 0).unwrap(), maghrib.time);
+    assert_eq!(false, maghrib.extreme);
+    let isha = pts.get(&Prayer::Isha).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(18, 51, 0).unwrap(), isha.time);
+    assert_eq!(false, isha.extreme);
+
+    let pts = pts_by_day.get(&end_date).unwrap();
+    let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(5, 46, 0).unwrap(), imsaak.time);
+    assert_eq!(false, imsaak.extreme);
+    let fajr = pts.get(&Prayer::Fajr).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(5, 54, 0).unwrap(), fajr.time);
+    assert_eq!(false, fajr.extreme);
+    let shurooq = pts.get(&Prayer::Shurooq).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(7, 8, 0).unwrap(), shurooq.time);
+    assert_eq!(false, shurooq.extreme);
+    let dhuhr = pts.get(&Prayer::Dhuhr).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(12, 23, 0).unwrap(), dhuhr.time);
+    assert_eq!(false, dhuhr.extreme);
+    let asr = pts.get(&Prayer::Asr).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(15, 14, 0).unwrap(), asr.time);
+    assert_eq!(false, asr.extreme);
+    let maghrib = pts.get(&Prayer::Maghrib).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(17, 38, 0).unwrap(), maghrib.time);
+    assert_eq!(false, maghrib.extreme);
+    let isha = pts.get(&Prayer::Isha).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(18, 52, 0).unwrap(), isha.time);
+    assert_eq!(false, isha.extreme);
 }
 
 #[test]
@@ -68,7 +114,7 @@ fn test_juneau_ak_default_params() {
     let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 
     // Act
-    let pts = times_dt(&params, location, date, None);
+    let pts = prayer_times_dt(&params, location, date, None);
 
     // Assert
     let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
@@ -108,7 +154,7 @@ fn test_juneau_ak_default_params_near_lat_all_prayers_always() {
     let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 
     // Act
-    let pts = times_dt(&params, location, date, None);
+    let pts = prayer_times_dt(&params, location, date, None);
 
     // Assert
     let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
@@ -148,7 +194,7 @@ fn test_juneau_ak_default_params_near_lat_fajr_isha_always() {
     let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 
     // Act
-    let pts = times_dt(&params, location, date, None);
+    let pts = prayer_times_dt(&params, location, date, None);
 
     // Assert
     let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
@@ -188,7 +234,7 @@ fn test_juneau_ak_default_params_near_lat_fajr_isha_inv() {
     let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 
     // Act
-    let pts = times_dt(&params, location, date, None);
+    let pts = prayer_times_dt(&params, location, date, None);
 
     // Assert
     let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
@@ -228,7 +274,7 @@ fn test_juneau_ak_default_params_near_good_day_all_prayers_always() {
     let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 
     // Act
-    let pts = times_dt(&params, location, date, None);
+    let pts = prayer_times_dt(&params, location, date, None);
 
     // Assert
     let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();
@@ -267,7 +313,7 @@ fn test_peurto_williams_cl_default_params() {
     let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 
     // Act
-    let pts = times_dt(&params, location, date, None);
+    let pts = prayer_times_dt(&params, location, date, None);
 
     // Assert
     let imsaak = pts.get(&Prayer::Imsaak).unwrap().unwrap();

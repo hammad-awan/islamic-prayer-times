@@ -10,12 +10,13 @@ use crate::{
 
 use super::{params::Weather, Prayer};
 
+pub const MIN_SEC_PER_HR_MIN: f64 = 60.;
+
 const DEGREES_TO_10_BASE: f64 = 0.066666666666666666;
 const INVALID_TRIGGER: f64 = 1.;
 const CENTER_OF_SUN_ANGLE: f64 = -0.83337;
 const DEF_ROUND_SEC: f64 = 30.;
 const AGGRESSIVE_ROUND_SEC: f64 = 1.;
-const MIN_SECS_PER_HR_MIN: f64 = 60.;
 const HRS_PER_DAY: f64 = 24.;
 
 pub fn get_hours(
@@ -222,7 +223,7 @@ pub fn hour_to_time(params: &Params, prayer: Prayer, hour: f64) -> NaiveTime {
     use Prayer::*;
     use RoundSeconds::*;
 
-    let mut hour = hour + params.min_offsets[&prayer] / MIN_SECS_PER_HR_MIN;
+    let mut hour = hour + params.min_offsets[&prayer] / MIN_SEC_PER_HR_MIN;
 
     if hour < 0. {
         while hour < 0. {
@@ -230,8 +231,8 @@ pub fn hour_to_time(params: &Params, prayer: Prayer, hour: f64) -> NaiveTime {
         }
     }
 
-    let mut min = (hour - hour.floor()) * MIN_SECS_PER_HR_MIN;
-    let mut sec = (min - min.floor()) * MIN_SECS_PER_HR_MIN;
+    let mut min = (hour - hour.floor()) * MIN_SEC_PER_HR_MIN;
+    let mut sec = (min - min.floor()) * MIN_SEC_PER_HR_MIN;
 
     match params.round_seconds {
         NormalRounding => {
@@ -259,9 +260,9 @@ pub fn hour_to_time(params: &Params, prayer: Prayer, hour: f64) -> NaiveTime {
 
 fn round_secs(hour: &mut f64, min: &mut f64, sec: &mut f64, sec_cap: f64) {
     if *sec >= sec_cap {
-        *hour += 1. / MIN_SECS_PER_HR_MIN;
+        *hour += 1. / MIN_SEC_PER_HR_MIN;
     }
 
-    *min = (*hour - hour.floor()) * MIN_SECS_PER_HR_MIN;
+    *min = (*hour - hour.floor()) * MIN_SEC_PER_HR_MIN;
     *sec = 0.;
 }
