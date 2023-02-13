@@ -34,7 +34,7 @@ impl JulianDay {
 
         let c = (365.25 * (new_year + 4716.)).floor();
         let d = (30.6001 * (new_month + 1.)).floor();
-        let value = b + c + d + (date.day() as f64 - f64::from(gmt) as f64 / 24.) - 1524.5;
+        let value = b + c + d + (date.day() as f64 - f64::from(gmt) / 24.) - 1524.5;
 
         Self { date, gmt, value }
     }

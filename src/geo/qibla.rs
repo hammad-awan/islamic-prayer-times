@@ -17,8 +17,8 @@ pub enum Rotation {
 impl Display for Rotation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let rot_str = match self {
-            &Rotation::Cw => "CW",
-            &Rotation::Ccw => "CCW",
+            Rotation::Cw => "CW",
+            Rotation::Ccw => "CCW",
         };
         write!(f, "{}", rot_str)
     }

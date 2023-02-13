@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::geo::coordinates::Latitude;
+use crate::{geo::coordinates::Latitude, OutOfRange};
 
 use super::Prayer;
 
@@ -148,11 +148,11 @@ impl Default for Params {
 pub struct Pressure(f64);
 
 impl Pressure {
-    pub fn new(pressure: f64) -> Result<Self, ()> {
-        if pressure < 100. || pressure > 1050. {
-            Err(())
-        } else {
+    pub fn new(pressure: f64) -> Result<Self, OutOfRange> {
+        if (100. ..=1050.).contains(&pressure) {
             Ok(Self(pressure))
+        } else {
+            Err(OutOfRange)
         }
     }
 }
@@ -167,11 +167,11 @@ impl From<Pressure> for f64 {
 pub struct Temperature(f64);
 
 impl Temperature {
-    pub fn new(temperature: f64) -> Result<Self, ()> {
-        if temperature < -90. || temperature > 57. {
-            Err(())
-        } else {
+    pub fn new(temperature: f64) -> Result<Self, OutOfRange> {
+        if (-90. ..=57.).contains(&temperature) {
             Ok(Self(temperature))
+        } else {
+            Err(OutOfRange)
         }
     }
 }

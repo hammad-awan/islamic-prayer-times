@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+
 use crate::angle::LimitAngle;
 
 use super::{coordinates::Coordinates, julian_day::JulianDay};
@@ -157,13 +159,13 @@ impl Astro {
 
     // Astronomical Algorithms pg. 420
     const L4: [(f64, f64, f64); 3] = [
-        (114.0, 3.142, 0.0),
+        (114.0, PI, 0.0),
         (8.0, 4.13, 6283.08),
         (1.0, 3.84, 12566.15),
     ];
 
     // Astronomical Algorithms pg. 420
-    const L5: [(f64, f64, f64); 1] = [(1., 3.14, 0.)];
+    const L5: [(f64, f64, f64); 1] = [(1., PI, 0.)];
 
     // Astronomical Algorithms pg. 420
     const B0: [(f64, f64, f64); 5] = [
@@ -225,7 +227,7 @@ impl Astro {
     const R1: [(f64, f64, f64); 10] = [
         (103019., 1.10749, 6283.07585),
         (1721., 1.0644, 12566.1517),
-        (702., 3.142, 0.),
+        (702., PI, 0.),
         (32., 1.02, 18849.23),
         (31., 2.84, 5507.55),
         (25., 1.32, 5223.69),
@@ -239,7 +241,7 @@ impl Astro {
     const R2: [(f64, f64, f64); 6] = [
         (4359., 5.7846, 6283.0758),
         (124., 5.579, 12566.152),
-        (12., 3.14, 0.),
+        (12., PI, 0.),
         (9., 3.63, 77713.77),
         (6., 1.87, 5573.14),
         (3., 5.47, 18849.),
@@ -496,7 +498,7 @@ impl Astro {
 
     fn calc_sum(elems: &[&[(f64, f64, f64)]], jms: &[f64]) -> f64 {
         elems.iter().enumerate().fold(0., |acc, (idx, xi)| {
-            acc + Self::calc_total(*xi, jms[1]) * jms[idx]
+            acc + Self::calc_total(xi, jms[1]) * jms[idx]
         }) / Self::TEN_POW_EIGHT
     }
 
@@ -547,10 +549,11 @@ pub struct AstroDay {
 impl AstroDay {
     pub fn new(julian_day: JulianDay) -> Self {
         let jd_val = f64::from(julian_day);
-        let mut astros = Vec::new();
-        astros.push(Astro::new(jd_val - 1.));
-        astros.push(Astro::new(jd_val));
-        astros.push(Astro::new(jd_val + 1.));
+        let astros = vec![
+            Astro::new(jd_val - 1.),
+            Astro::new(jd_val),
+            Astro::new(jd_val + 1.),
+        ];
 
         Self { astros, julian_day }
     }

@@ -3,7 +3,7 @@ pub mod params;
 mod ext_lat;
 mod hours;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, mem::swap};
 
 use chrono::{NaiveDate, NaiveTime};
 
@@ -40,14 +40,14 @@ pub struct DateRange {
 }
 
 impl DateRange {
-    pub fn new(start_date: NaiveDate, end_date: NaiveDate) -> Result<Self, ()> {
+    pub fn new(mut start_date: NaiveDate, mut end_date: NaiveDate) -> Self {
         if start_date > end_date {
-            Err(())
-        } else {
-            Ok(Self {
-                start_date,
-                end_date,
-            })
+            swap(&mut start_date, &mut end_date);
+        }
+
+        Self {
+            start_date,
+            end_date,
         }
     }
 }
@@ -113,8 +113,8 @@ fn get_hours_adj_ext(
     top_astro_day: &TopAstroDay,
     weather: Weather,
 ) -> HashMap<Prayer, Result<PrayerHour, ()>> {
-    let hours = get_hours(params, &top_astro_day, weather);
-    adj_for_ext_lat(params, hours, &top_astro_day, weather)
+    let hours = get_hours(params, top_astro_day, weather);
+    adj_for_ext_lat(params, hours, top_astro_day, weather)
 }
 
 fn get_imsaak(
@@ -137,7 +137,7 @@ fn get_imsaak(
         *params_adj.angles.get_mut(&Fajr).unwrap() += params.angles[&Imsaak];
     }
 
-    let mut hours = get_hours_adj_ext(&params_adj, &top_astro_day, weather);
+    let mut hours = get_hours_adj_ext(&params_adj, top_astro_day, weather);
     if let Ok(hour) = hours[&Fajr] {
         if hour.extreme {
             params_adj = params.clone();
@@ -147,7 +147,7 @@ fn get_imsaak(
                 params.intervals[&Imsaak]
             };
 
-            hours = get_hours_adj_ext(&params_adj, &top_astro_day, weather);
+            hours = get_hours_adj_ext(&params_adj, top_astro_day, weather);
         }
     }
 

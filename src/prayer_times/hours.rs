@@ -3,7 +3,7 @@ use std::{collections::HashMap, ops::Rem};
 use chrono::NaiveTime;
 
 use crate::{
-    angle::{LimitAngle, DEG_IN_CIRCLE},
+    angle::{LimitAngle, TWO_PI_DEG},
     geo::astro::TopAstroDay,
     prayer_times::params::{Params, RoundSeconds},
 };
@@ -11,13 +11,12 @@ use crate::{
 use super::{params::Weather, Prayer};
 
 pub const MIN_SEC_PER_HR_MIN: f64 = 60.;
+pub const HRS_PER_DAY: f64 = 24.;
 
-const DEGREES_TO_10_BASE: f64 = 0.066666666666666666;
-const INVALID_TRIGGER: f64 = 1.;
+const DEGREES_TO_10_BASE: f64 = 0.06666666666666667;
 const CENTER_OF_SUN_ANGLE: f64 = -0.83337;
 const DEF_ROUND_SEC: f64 = 30.;
 const AGGRESSIVE_ROUND_SEC: f64 = 1.;
-const HRS_PER_DAY: f64 = 24.;
 
 pub fn get_hours(
     params: &Params,
@@ -50,10 +49,10 @@ fn get_shur_dhuhr_magh(
     let m_0 = (top_astro_day.astro().ra()
         - f64::from(top_astro_day.coords().longitude)
         - top_astro_day.astro().sid_time())
-        / DEG_IN_CIRCLE;
+        / TWO_PI_DEG;
     let dhuhr_m_time = m_0.cap_angle_1();
     let dhuhr_hour_angle = get_hour_angle(top_astro_day, ra_interp_deltas, dhuhr_m_time);
-    let dhuhr_delta_m = dhuhr_hour_angle / DEG_IN_CIRCLE;
+    let dhuhr_delta_m = dhuhr_hour_angle / TWO_PI_DEG;
     let dhuhr_hour = HRS_PER_DAY * (dhuhr_m_time - dhuhr_delta_m);
 
     let shur_magh_res = if let Ok(sm_m_0_adj) = get_shur_magh_m_0_adj(top_astro_day) {
@@ -93,7 +92,7 @@ fn get_ra_interp_deltas(top_astro_day: &TopAstroDay) -> (f64, f64) {
     let j = 350.;
     let k = 10.;
     if top_astro_day.astro().ra() > j && next_ra < k {
-        next_ra += DEG_IN_CIRCLE;
+        next_ra += TWO_PI_DEG;
     }
     if prev_ra > j && top_astro_day.astro().ra() < k {
         prev_ra = 0.;
@@ -126,13 +125,16 @@ fn get_shur_magh_m_0_adj(top_astro_day: &TopAstroDay) -> Result<f64, ()> {
     let n = CENTER_OF_SUN_ANGLE.to_radians().sin() - lat_rads.sin() * dec_rads.sin();
     let d = lat_rads.cos() * dec_rads.cos();
     let r = n / d;
-    if r < -INVALID_TRIGGER || r > INVALID_TRIGGER {
-        return Err(());
+    if within_abs_1(r) {
+        // Astronomical Algorithms pg. 102 (15.2)
+        Ok(r.acos().to_degrees().cap_angle_180() / TWO_PI_DEG)
+    } else {
+        Err(())
     }
+}
 
-    // Astronomical Algorithms pg. 102 (15.2)
-    let adj = r.acos().to_degrees().cap_angle_180() / DEG_IN_CIRCLE;
-    Ok(adj)
+fn within_abs_1(val: f64) -> bool {
+    (-1. ..=1.).contains(&val)
 }
 
 fn get_shur_magh(
@@ -159,7 +161,7 @@ fn get_shur_magh(
     sun_alt += get_refraction(weather, sun_alt);
     // Astronomical Algorithms pg. 103
     let delta_m = (sun_alt - CENTER_OF_SUN_ANGLE)
-        / (DEG_IN_CIRCLE * dec_interp_rads.cos() * lat_rads.cos() * hour_angle_rads.sin());
+        / (TWO_PI_DEG * dec_interp_rads.cos() * lat_rads.cos() * hour_angle_rads.sin());
     HRS_PER_DAY * (m_time + delta_m)
 }
 
@@ -190,15 +192,15 @@ fn get_fajr_isha(
     let s = lat_rads.sin() * dec_rads.sin();
     let fajr_hour = ((-params.angles[&Fajr]).to_radians().sin() - s) / c;
     let isha_hour = ((-params.angles[&Isha]).to_radians().sin() - s) / c;
-    let fajr_hour = if fajr_hour < -INVALID_TRIGGER || fajr_hour > INVALID_TRIGGER {
-        Err(())
-    } else {
+    let fajr_hour = if within_abs_1(fajr_hour) {
         Ok(dhuhr_hour - DEGREES_TO_10_BASE * fajr_hour.acos().to_degrees())
-    };
-    let isha_hour = if isha_hour < -INVALID_TRIGGER || isha_hour > INVALID_TRIGGER {
-        Err(())
     } else {
+        Err(())
+    };
+    let isha_hour = if within_abs_1(isha_hour) {
         Ok(dhuhr_hour + DEGREES_TO_10_BASE * isha_hour.acos().to_degrees())
+    } else {
+        Err(())
     };
 
     (fajr_hour, isha_hour)
@@ -211,11 +213,11 @@ fn get_asr(params: &Params, top_astro_day: &TopAstroDay, dhuhr_hour: f64) -> Res
     let mut asr_hour = madhab + (lat_rads - dec_rads).abs().tan();
     asr_hour = (1. / asr_hour).atan();
     asr_hour = asr_hour.sin() - lat_rads.sin() * dec_rads.sin();
-    asr_hour = asr_hour / (lat_rads.cos() * dec_rads.cos());
-    if asr_hour < -INVALID_TRIGGER || asr_hour > INVALID_TRIGGER {
-        Err(())
-    } else {
+    asr_hour /= lat_rads.cos() * dec_rads.cos();
+    if within_abs_1(asr_hour) {
         Ok(dhuhr_hour + DEGREES_TO_10_BASE * asr_hour.acos().to_degrees())
+    } else {
+        Err(())
     }
 }
 

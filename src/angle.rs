@@ -1,6 +1,8 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-pub const DEG_IN_CIRCLE: f64 = 360.;
+pub const TWO_PI_DEG: f64 = 360.;
+pub const PI_DEG: f64 = 180.;
+pub const RIGHT_ANG_DEG: f64 = 90.;
 
 pub trait CanFloor {
     fn floor(self) -> Self;
@@ -33,12 +35,12 @@ where
 
     /// Caps angle between 0 and 360 degrees.
     fn cap_angle_360(self) -> Self {
-        self.cap_angle(Self::from(DEG_IN_CIRCLE))
+        self.cap_angle(Self::from(TWO_PI_DEG))
     }
 
     /// Caps an angle between 0 and 180 degrees.
     fn cap_angle_180(self) -> Self {
-        self.cap_angle(Self::from(DEG_IN_CIRCLE / 2.))
+        self.cap_angle(Self::from(PI_DEG))
     }
 
     // Caps an angle between 0 and cap degrees.
@@ -53,12 +55,12 @@ where
 
     // Caps an angle between -180 and 180 degrees.
     fn cap_angle_between_180(self) -> Self {
-        let val = self / Self::from(DEG_IN_CIRCLE);
-        let val = (val - val.floor()) * Self::from(DEG_IN_CIRCLE);
-        if val < Self::from(-DEG_IN_CIRCLE / 2.) {
-            val + Self::from(DEG_IN_CIRCLE)
-        } else if val > Self::from(DEG_IN_CIRCLE / 2.) {
-            val - Self::from(DEG_IN_CIRCLE)
+        let val = self / Self::from(TWO_PI_DEG);
+        let val = (val - val.floor()) * Self::from(TWO_PI_DEG);
+        if val < Self::from(-PI_DEG) {
+            val + Self::from(TWO_PI_DEG)
+        } else if val > Self::from(PI_DEG) {
+            val - Self::from(TWO_PI_DEG)
         } else {
             val
         }
