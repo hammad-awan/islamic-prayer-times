@@ -1,6 +1,7 @@
 use core::fmt;
 
 pub mod geo;
+pub mod hijri_date;
 pub mod prayer_times;
 
 mod angle;
@@ -15,3 +16,14 @@ impl fmt::Display for OutOfRange {
 }
 
 impl std::error::Error for OutOfRange {}
+
+#[derive(Debug, Clone, Copy)]
+pub struct ConversionError;
+
+impl fmt::Display for ConversionError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Conversion Error")
+    }
+}
+
+impl std::error::Error for ConversionError {}
