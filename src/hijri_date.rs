@@ -85,16 +85,15 @@ impl Display for HijriMonth {
         use HijriMonth::*;
 
         let default = format!("{:?}", self);
-        let val: &str;
-        match self {
-            RabiaAwal => val = "Rabia Awal",
-            RabiaThani => val = "Rabia Thani",
-            JumadaAwal => val = "Jumada Awal",
-            JumadaThani => val = "Jumada Thani",
-            DhulQiddah => val = "Dhul Qiddah",
-            DhulHijjah => val = "Dhul Hijjah",
-            _ => val = &default,
-        }
+        let val = match self {
+            RabiaAwal => "Rabia Awal",
+            RabiaThani => "Rabia Thani",
+            JumadaAwal => "Jumada Awal",
+            JumadaThani => "Jumada Thani",
+            DhulQiddah => "Dhul Qiddah",
+            DhulHijjah => "Dhul Hijjah",
+            _ => &default,
+        };
 
         write!(f, "{}", val)
     }
@@ -113,12 +112,12 @@ impl HijriDate {
     const HIJRI_EPOCH: i32 = 227015;
 
     pub fn from(date: NaiveDate) -> Self {
-        let date_temp = if date.year() < 0 {
+        let adj_date = if date.year() < 0 {
             NaiveDate::from_ymd_opt(date.year() + 1, date.month(), date.day()).unwrap()
         } else {
             date
         };
-        let greg_date = Self::greg_abs_date(date_temp);
+        let greg_date = Self::greg_abs_date(adj_date);
         let year = Self::hijri_year(greg_date);
         let month = Self::month_val(greg_date, year);
         let day = (greg_date - Self::hijri_abs_date(1, month, year) + 1) as u8;
@@ -218,7 +217,7 @@ impl HijriDate {
         let mut pre_epoch = false;
         if year <= 0 {
             pre_epoch = true;
-            year = (year - 1) * -1;
+            year = -(year - 1);
         }
 
         (year as u32, pre_epoch)
