@@ -19,6 +19,7 @@ pub enum Method {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ExtremeLatitudeMethod {
     None,
+    AngleBased,
     NearestLatitudeAllPrayersAlways,
     NearestLatitudeFajrIshaAlways,
     NearestLatitudeFajrIshaInvalid,

@@ -56,6 +56,7 @@ pub fn adj_for_ext_lat(
     );
 
     match params.ext_lat_method {
+        AngleBased => angle_based(params, &hours),
         NearestLatitudeAllPrayersAlways
         | NearestLatitudeFajrIshaAlways
         | NearestLatitudeFajrIshaInvalid => adj_near_lat(params, &hours, top_astro_day, weather),
@@ -103,6 +104,21 @@ fn is_ext_lat_always(ext_lat_meth: ExtremeLatitudeMethod) -> bool {
             | HalfOfNightFajrIshaAlways
             | MinutesFromMaghribFajrIshaAlways
     )
+}
+
+fn angle_based(params: &Params, hours: &HashMap<Prayer, RefCell<Result<PrayerHour, ()>>>) {
+    use Prayer::*;
+
+    if hours[&Shurooq].borrow().is_ok() && hours[&Maghrib].borrow().is_ok() {
+        let shur_hour = hours[&Shurooq].borrow().unwrap().value;
+        let magh_hour = hours[&Maghrib].borrow().unwrap().value;
+        let portion = HRS_PER_DAY - magh_hour + shur_hour;
+        let ratio = 1. / MIN_SEC_PER_HR_MIN;
+        let fajr_diff = ratio * params.angles[&Fajr] * portion;
+        let isha_diff = ratio * params.angles[&Isha] * portion;
+        *hours[&Fajr].borrow_mut() = Ok(PrayerHour::new_extreme(shur_hour - fajr_diff));
+        *hours[&Isha].borrow_mut() = Ok(PrayerHour::new_extreme(magh_hour + isha_diff));
+    }
 }
 
 fn adj_near_lat(
