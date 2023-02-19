@@ -14,13 +14,10 @@ use crate::{
         julian_day::JulianDay,
     },
     prayer_times::{ext_lat::adj_for_ext_lat, hours::get_hours},
+    OutOfRange,
 };
 
-use self::{
-    ext_lat::PrayerHour,
-    hours::hour_to_time,
-    params::{Params, Weather},
-};
+use self::{ext_lat::PrayerHour, hours::hour_to_time, params::Params};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Prayer {
@@ -56,6 +53,59 @@ impl DateRange {
 pub struct Location {
     pub coords: Coordinates,
     pub gmt: Gmt,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Pressure(f64);
+
+impl Pressure {
+    pub fn new(pressure: f64) -> Result<Self, OutOfRange> {
+        if (100. ..=1050.).contains(&pressure) {
+            Ok(Self(pressure))
+        } else {
+            Err(OutOfRange)
+        }
+    }
+}
+
+impl From<Pressure> for f64 {
+    fn from(value: Pressure) -> Self {
+        value.0
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Temperature(f64);
+
+impl Temperature {
+    pub fn new(temperature: f64) -> Result<Self, OutOfRange> {
+        if (-90. ..=57.).contains(&temperature) {
+            Ok(Self(temperature))
+        } else {
+            Err(OutOfRange)
+        }
+    }
+}
+
+impl From<Temperature> for f64 {
+    fn from(value: Temperature) -> Self {
+        value.0
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Weather {
+    pub pressure: Pressure,
+    pub temperature: Temperature,
+}
+
+impl Default for Weather {
+    fn default() -> Self {
+        Self {
+            pressure: Pressure::new(1010.).unwrap(),
+            temperature: Temperature::new(14.).unwrap(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

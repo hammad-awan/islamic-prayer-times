@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
-use crate::{geo::coordinates::Latitude, OutOfRange};
+use crate::geo::coordinates::Latitude;
 
 use super::Prayer;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Method {
     None,
     Egyptian,
@@ -43,7 +43,7 @@ pub enum RoundSeconds {
     AggressiveRounding,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AsrShadowRatio {
     Shafi = 1,
     Hanafi,
@@ -80,13 +80,13 @@ impl Params {
         intervals.insert(Isha, 0.);
 
         let mut min_offsets = HashMap::new();
+        min_offsets.insert(Imsaak, 0.);
         min_offsets.insert(Fajr, 0.);
         min_offsets.insert(Shurooq, 0.);
         min_offsets.insert(Dhuhr, 0.);
         min_offsets.insert(Asr, 0.);
         min_offsets.insert(Maghrib, 0.);
         min_offsets.insert(Isha, 0.);
-        min_offsets.insert(Imsaak, 0.);
 
         match method {
             Method::None => {
@@ -94,8 +94,8 @@ impl Params {
                 angles.insert(Isha, 0.);
             }
             Egyptian => {
-                angles.insert(Fajr, 20.);
-                angles.insert(Isha, 18.);
+                angles.insert(Fajr, 19.);
+                angles.insert(Isha, 17.5);
             }
             Shafi => {
                 angles.insert(Fajr, 18.);
@@ -115,7 +115,7 @@ impl Params {
                 angles.insert(Isha, 17.);
             }
             UmmAlQurra => {
-                angles.insert(Fajr, 19.);
+                angles.insert(Fajr, 18.);
                 angles.insert(Isha, 0.);
                 *intervals.get_mut(&Isha).unwrap() = 90.;
             }
@@ -142,58 +142,5 @@ impl Params {
 impl Default for Params {
     fn default() -> Self {
         Self::new(Method::Isna)
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Pressure(f64);
-
-impl Pressure {
-    pub fn new(pressure: f64) -> Result<Self, OutOfRange> {
-        if (100. ..=1050.).contains(&pressure) {
-            Ok(Self(pressure))
-        } else {
-            Err(OutOfRange)
-        }
-    }
-}
-
-impl From<Pressure> for f64 {
-    fn from(value: Pressure) -> Self {
-        value.0
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Temperature(f64);
-
-impl Temperature {
-    pub fn new(temperature: f64) -> Result<Self, OutOfRange> {
-        if (-90. ..=57.).contains(&temperature) {
-            Ok(Self(temperature))
-        } else {
-            Err(OutOfRange)
-        }
-    }
-}
-
-impl From<Temperature> for f64 {
-    fn from(value: Temperature) -> Self {
-        value.0
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Weather {
-    pub pressure: Pressure,
-    pub temperature: Temperature,
-}
-
-impl Default for Weather {
-    fn default() -> Self {
-        Self {
-            pressure: Pressure::new(1010.).unwrap(),
-            temperature: Temperature::new(14.).unwrap(),
-        }
     }
 }

@@ -8,7 +8,7 @@ use crate::{
     prayer_times::params::{Params, RoundSeconds},
 };
 
-use super::{params::Weather, Prayer};
+use super::{Prayer, Weather};
 
 pub const MIN_SEC_PER_HR_MIN: f64 = 60.;
 pub const HRS_PER_DAY: f64 = 24.;

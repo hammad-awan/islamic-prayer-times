@@ -10,10 +10,7 @@ use crate::{
     },
 };
 
-use super::{
-    params::{Params, Weather},
-    Prayer,
-};
+use super::{params::Params, Prayer, Weather};
 
 #[derive(Debug, Clone, Copy)]
 pub struct PrayerHour {
@@ -45,33 +42,33 @@ pub fn adj_for_ext_lat(
 ) -> HashMap<Prayer, Result<PrayerHour, ()>> {
     use ExtremeLatitudeMethod::*;
 
-    if !can_adj(&hours, params.ext_lat_method) {
-        return HashMap::from_iter(hours.iter().map(|x| (*x.0, x.1.map(PrayerHour::new))));
-    }
-
     let hours: HashMap<_, _> = HashMap::from_iter(
         hours
             .iter()
             .map(|x| (*x.0, RefCell::new(x.1.map(PrayerHour::new)))),
     );
 
-    match params.ext_lat_method {
-        AngleBased => angle_based(params, &hours),
-        NearestLatitudeAllPrayersAlways
-        | NearestLatitudeFajrIshaAlways
-        | NearestLatitudeFajrIshaInvalid => adj_near_lat(params, &hours, top_astro_day, weather),
-        NearestGoodDayAllPrayersAlways | NearestGoodDayFajrIshaInvalid => {
-            adj_near_good(params, &hours, top_astro_day, weather)
+    if can_adj(&hours, params.ext_lat_method) {
+        match params.ext_lat_method {
+            AngleBased => angle_based(params, &hours),
+            NearestLatitudeAllPrayersAlways
+            | NearestLatitudeFajrIshaAlways
+            | NearestLatitudeFajrIshaInvalid => {
+                adj_near_lat(params, &hours, top_astro_day, weather)
+            }
+            NearestGoodDayAllPrayersAlways | NearestGoodDayFajrIshaInvalid => {
+                adj_near_good(params, &hours, top_astro_day, weather)
+            }
+            SeventhOfNightFajrIshaAlways
+            | SeventhOfNightFajrIshaInvalid
+            | SeventhOfDayFajrIshaAlways
+            | SeventhOfDayFajrIshaInvalid
+            | HalfOfNightFajrIshaAlways
+            | HalfOfNightFajrIshaInvalid => adj_sev_half(params, &hours),
+            MinutesFromMaghribFajrIshaAlways => adj_min_always(&hours),
+            MinutesFromMaghribFajrIshaInvalid => adj_min_inv(params, &hours),
+            _ => {}
         }
-        SeventhOfNightFajrIshaAlways
-        | SeventhOfNightFajrIshaInvalid
-        | SeventhOfDayFajrIshaAlways
-        | SeventhOfDayFajrIshaInvalid
-        | HalfOfNightFajrIshaAlways
-        | HalfOfNightFajrIshaInvalid => adj_sev_half(params, &hours),
-        MinutesFromMaghribFajrIshaAlways => adj_min_always(&hours),
-        MinutesFromMaghribFajrIshaInvalid => adj_min_inv(params, &hours),
-        _ => {}
     }
 
     adj_for_int(params, &hours);
@@ -80,15 +77,15 @@ pub fn adj_for_ext_lat(
 }
 
 fn can_adj(
-    prayer_hours: &HashMap<Prayer, Result<f64, ()>>,
+    hours: &HashMap<Prayer, RefCell<Result<PrayerHour, ()>>>,
     ext_lat_meth: ExtremeLatitudeMethod,
 ) -> bool {
     ext_lat_meth != ExtremeLatitudeMethod::None
-        && (has_inv_hours(prayer_hours) || is_ext_lat_always(ext_lat_meth))
+        && (has_inv_hours(hours) || is_ext_lat_always(ext_lat_meth))
 }
 
-fn has_inv_hours(prayer_hours: &HashMap<Prayer, Result<f64, ()>>) -> bool {
-    prayer_hours.iter().any(|x| x.1.is_err())
+fn has_inv_hours(hours: &HashMap<Prayer, RefCell<Result<PrayerHour, ()>>>) -> bool {
+    hours.iter().any(|x| x.1.borrow().is_err())
 }
 
 fn is_ext_lat_always(ext_lat_meth: ExtremeLatitudeMethod) -> bool {
@@ -169,23 +166,23 @@ fn adj_near_good(
     let mut adj_hours = HashMap::new();
     let julian_day = top_astro_day.julian_day();
     for i in 0..=julian_day.date.ordinal() {
-        if let Some(x) = test_fajr_isha(
+        if let Some(hour) = test_fajr_isha(
             params,
             top_astro_day.coords(),
             weather,
             julian_day.sub(i as u64),
         ) {
-            adj_hours = x;
+            adj_hours = hour;
             break;
         }
 
-        if let Some(x) = test_fajr_isha(
+        if let Some(hour) = test_fajr_isha(
             params,
             top_astro_day.coords(),
             weather,
             julian_day.add(i as u64),
         ) {
-            adj_hours = x;
+            adj_hours = hour;
             break;
         }
     }
@@ -242,7 +239,7 @@ fn adj_sev_half(params: &Params, hours: &HashMap<Prayer, RefCell<Result<PrayerHo
             SeventhOfDayFajrIshaAlways | SeventhOfDayFajrIshaInvalid => {
                 (magh_hour - shur_hour) / 7.
             } // HalfOfNightFajrIshaAlways | HalfOfNightFajrIshaInvalid
-            _ => (HRS_PER_DAY - (magh_hour - shur_hour)) * 0.5,
+            _ => (HRS_PER_DAY - magh_hour - shur_hour) * 0.5,
         };
 
         match params.ext_lat_method {
@@ -270,6 +267,7 @@ fn adj_sev_half(params: &Params, hours: &HashMap<Prayer, RefCell<Result<PrayerHo
                             portion - params.intervals[&Fajr] / MIN_SEC_PER_HR_MIN,
                         ));
                     } else {
+                        // SeventhOfNightFajrIshaInvalid | SeventhOfDayFajrIshaInvalid
                         *hours[&Fajr].borrow_mut() =
                             Ok(PrayerHour::new_extreme(shur_hour - portion));
                     }
@@ -281,6 +279,7 @@ fn adj_sev_half(params: &Params, hours: &HashMap<Prayer, RefCell<Result<PrayerHo
                             portion + params.intervals[&Isha] / MIN_SEC_PER_HR_MIN,
                         ));
                     } else {
+                        // SeventhOfNightFajrIshaInvalid | SeventhOfDayFajrIshaInvalid
                         *hours[&Isha].borrow_mut() =
                             Ok(PrayerHour::new_extreme(magh_hour + portion));
                     }
@@ -293,6 +292,7 @@ fn adj_sev_half(params: &Params, hours: &HashMap<Prayer, RefCell<Result<PrayerHo
 fn adj_min_always(hours: &HashMap<Prayer, RefCell<Result<PrayerHour, ()>>>) {
     use Prayer::*;
 
+    // Do nothing because this is implemented through fajr and isha intervals.
     *hours[&Fajr].borrow_mut() = hours[&Shurooq].borrow().map(|mut x| {
         x.extreme = true;
         x
@@ -333,15 +333,19 @@ fn adj_for_int(params: &Params, hours: &HashMap<Prayer, RefCell<Result<PrayerHou
         && params.ext_lat_method != HalfOfNightFajrIshaAlways
     {
         if params.intervals[&Fajr] != 0. {
+            let extreme = hours[&Fajr].borrow().unwrap().extreme;
             *hours[&Fajr].borrow_mut() = hours[&Shurooq].borrow().map(|mut x| {
                 x.value -= params.intervals[&Fajr] / MIN_SEC_PER_HR_MIN;
+                x.extreme = extreme;
                 x
             });
         }
 
         if params.intervals[&Isha] != 0. {
+            let extreme = hours[&Isha].borrow().unwrap().extreme;
             *hours[&Isha].borrow_mut() = hours[&Maghrib].borrow().map(|mut x| {
                 x.value += params.intervals[&Isha] / MIN_SEC_PER_HR_MIN;
+                x.extreme = extreme;
                 x
             });
         }

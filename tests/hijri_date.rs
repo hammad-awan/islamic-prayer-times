@@ -20,23 +20,13 @@ fn test_saturday_august() {
 }
 
 #[test]
-fn test_tuesday_december() {
+fn test_sunday_november() {
     // Arrange
-    let date = NaiveDate::from_ymd_opt(2020, 12, 1).unwrap();
+    let date = NaiveDate::from_ymd_opt(2020, 11, 1).unwrap();
     // Act
     let hijri_date = HijriDate::from(date);
     // Assert
-    assert_eq!("Thulatha Rabia Thani 15, 1442 A.H.", hijri_date.to_string());
-}
-
-#[test]
-fn test_friday_july() {
-    // Arrange
-    let date = NaiveDate::from_ymd_opt(2020, 7, 3).unwrap();
-    // Act
-    let hijri_date = HijriDate::from(date);
-    // Assert
-    assert_eq!("Jumaa Dhul Qiddah 12, 1441 A.H.", hijri_date.to_string());
+    assert_eq!("Ahad Rabia Awal 15, 1442 A.H.", hijri_date.to_string());
 }
 
 #[test]
@@ -50,13 +40,23 @@ fn test_monday_march() {
 }
 
 #[test]
-fn test_sunday_november() {
+fn test_tuesday_december() {
     // Arrange
-    let date = NaiveDate::from_ymd_opt(2020, 11, 1).unwrap();
+    let date = NaiveDate::from_ymd_opt(2020, 12, 1).unwrap();
     // Act
     let hijri_date = HijriDate::from(date);
     // Assert
-    assert_eq!("Ahad Rabia Awal 15, 1442 A.H.", hijri_date.to_string());
+    assert_eq!("Thulatha Rabia Thani 15, 1442 A.H.", hijri_date.to_string());
+}
+
+#[test]
+fn test_wednesday_may() {
+    // Arrange
+    let date = NaiveDate::from_ymd_opt(2020, 5, 6).unwrap();
+    // Act
+    let hijri_date = HijriDate::from(date);
+    // Assert
+    assert_eq!("Arbiaa Ramadan 13, 1441 A.H.", hijri_date.to_string());
 }
 
 #[test]
@@ -70,13 +70,13 @@ fn test_thursday_october() {
 }
 
 #[test]
-fn test_wednesday_may() {
+fn test_friday_july() {
     // Arrange
-    let date = NaiveDate::from_ymd_opt(2020, 5, 6).unwrap();
+    let date = NaiveDate::from_ymd_opt(2020, 7, 3).unwrap();
     // Act
     let hijri_date = HijriDate::from(date);
     // Assert
-    assert_eq!("Arbiaa Ramadan 13, 1441 A.H.", hijri_date.to_string());
+    assert_eq!("Jumaa Dhul Qiddah 12, 1441 A.H.", hijri_date.to_string());
 }
 
 #[test]
