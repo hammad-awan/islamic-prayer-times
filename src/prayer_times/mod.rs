@@ -55,7 +55,7 @@ pub struct Location {
     pub gmt: Gmt,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Pressure(f64);
 
 impl Pressure {
@@ -74,7 +74,7 @@ impl From<Pressure> for f64 {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Temperature(f64);
 
 impl Temperature {
