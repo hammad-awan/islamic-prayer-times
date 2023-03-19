@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use crate::{
     angle::{PI_DEG, RIGHT_ANG_DEG},
-    OutOfRange,
+    error::OutOfRange,
 };
 
 #[derive(Debug, Copy, Clone, PartialEq)]

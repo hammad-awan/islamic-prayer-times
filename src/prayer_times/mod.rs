@@ -8,13 +8,13 @@ use std::{collections::HashMap, mem::swap};
 use chrono::{NaiveDate, NaiveTime};
 
 use crate::{
+    error::OutOfRange,
     geo::{
         astro::TopAstroDay,
         coordinates::{Coordinates, Gmt},
         julian_day::JulianDay,
     },
     prayer_times::{ext_lat::adj_for_ext_lat, hours::get_hours},
-    OutOfRange,
 };
 
 use self::{ext_lat::PrayerHour, hours::hour_to_time, params::Params};

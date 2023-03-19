@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use chrono::{Datelike, NaiveDate};
 
-use crate::ConversionError;
+use crate::error::ConversionError;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HijriDay {
