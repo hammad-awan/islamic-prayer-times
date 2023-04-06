@@ -145,7 +145,7 @@ fn test_potomac_md_default_params_hanafi() {
 fn test_potomac_md_default_params_ang_bas() {
     // Arrange
     let mut params = Params::default();
-    params.ext_lat_method = ExtremeLatitudeMethod::AngleBased;
+    params.extreme_latitude_method = ExtremeLatitudeMethod::AngleBased;
     let latitude = Latitude::new(39.0181651).unwrap();
     let longitude = Longitude::new(-77.2085914).unwrap();
     let elevation = Elevation::new(0.).unwrap();
@@ -187,13 +187,13 @@ fn test_potomac_md_default_params_min_off() {
 
     // Arrange
     let mut params = Params::default();
-    *params.min_offsets.get_mut(&Imsaak).unwrap() = 1.;
-    *params.min_offsets.get_mut(&Fajr).unwrap() = 1.;
-    *params.min_offsets.get_mut(&Shurooq).unwrap() = 1.;
-    *params.min_offsets.get_mut(&Dhuhr).unwrap() = 1.;
-    *params.min_offsets.get_mut(&Asr).unwrap() = 1.;
-    *params.min_offsets.get_mut(&Maghrib).unwrap() = 1.;
-    *params.min_offsets.get_mut(&Isha).unwrap() = 1.;
+    *params.minutes.get_mut(&Imsaak).unwrap() = 1.;
+    *params.minutes.get_mut(&Fajr).unwrap() = 1.;
+    *params.minutes.get_mut(&Shurooq).unwrap() = 1.;
+    *params.minutes.get_mut(&Dhuhr).unwrap() = 1.;
+    *params.minutes.get_mut(&Asr).unwrap() = 1.;
+    *params.minutes.get_mut(&Maghrib).unwrap() = 1.;
+    *params.minutes.get_mut(&Isha).unwrap() = 1.;
     let latitude = Latitude::new(39.0181651).unwrap();
     let longitude = Longitude::new(-77.2085914).unwrap();
     let elevation = Elevation::new(0.).unwrap();

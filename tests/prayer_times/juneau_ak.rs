@@ -1,10 +1,7 @@
 use chrono::{NaiveDate, NaiveTime};
 use islamic_prayer_times::{
-    geo::coordinates::{Coordinates, Elevation, Gmt, Latitude, Longitude},
-    prayer_times::{
-        params::{ExtremeLatitudeMethod, Params},
-        prayer_times_dt, Location, Prayer,
-    },
+    prayer_times_dt, Coordinates, Elevation, ExtremeLatitudeMethod, Gmt, Latitude, Location,
+    Longitude, Params, Prayer,
 };
 
 #[test]
@@ -50,7 +47,7 @@ fn test_juneau_ak_default_params() {
 fn test_juneau_ak_default_params_near_good_day_all_prayers_always() {
     // Arrange
     let mut params = Params::default();
-    params.ext_lat_method = ExtremeLatitudeMethod::NearestGoodDayAllPrayersAlways;
+    params.extreme_latitude_method = ExtremeLatitudeMethod::NearestGoodDayAllPrayersAlways;
     let latitude = Latitude::new(58.3019444).unwrap();
     let longitude = Longitude::new(-134.4197222).unwrap();
     let elevation = Elevation::new(87.).unwrap();
@@ -90,7 +87,7 @@ fn test_juneau_ak_default_params_near_good_day_all_prayers_always() {
 fn test_juneau_ak_default_params_near_lat_all_prayers_always() {
     // Arrange
     let mut params = Params::default();
-    params.ext_lat_method = ExtremeLatitudeMethod::NearestLatitudeAllPrayersAlways;
+    params.extreme_latitude_method = ExtremeLatitudeMethod::NearestLatitudeAllPrayersAlways;
     let latitude = Latitude::new(58.3019444).unwrap();
     let longitude = Longitude::new(-134.4197222).unwrap();
     let elevation = Elevation::new(87.).unwrap();
@@ -130,7 +127,7 @@ fn test_juneau_ak_default_params_near_lat_all_prayers_always() {
 fn test_juneau_ak_default_params_near_lat_fajr_isha_always() {
     // Arrange
     let mut params = Params::default();
-    params.ext_lat_method = ExtremeLatitudeMethod::NearestLatitudeFajrIshaAlways;
+    params.extreme_latitude_method = ExtremeLatitudeMethod::NearestLatitudeFajrIshaAlways;
     let latitude = Latitude::new(58.3019444).unwrap();
     let longitude = Longitude::new(-134.4197222).unwrap();
     let elevation = Elevation::new(87.).unwrap();
@@ -170,7 +167,7 @@ fn test_juneau_ak_default_params_near_lat_fajr_isha_always() {
 fn test_juneau_ak_default_params_near_lat_fajr_isha_inv() {
     // Arrange
     let mut params = Params::default();
-    params.ext_lat_method = ExtremeLatitudeMethod::NearestLatitudeFajrIshaInvalid;
+    params.extreme_latitude_method = ExtremeLatitudeMethod::NearestLatitudeFajrIshaInvalid;
     let latitude = Latitude::new(58.3019444).unwrap();
     let longitude = Longitude::new(-134.4197222).unwrap();
     let elevation = Elevation::new(87.).unwrap();
@@ -210,7 +207,7 @@ fn test_juneau_ak_default_params_near_lat_fajr_isha_inv() {
 fn test_juneau_ak_default_params_sev_day_fajr_isha_always() {
     // Arrange
     let mut params = Params::default();
-    params.ext_lat_method = ExtremeLatitudeMethod::SeventhOfDayFajrIshaAlways;
+    params.extreme_latitude_method = ExtremeLatitudeMethod::SeventhOfDayFajrIshaAlways;
     let latitude = Latitude::new(58.3019444).unwrap();
     let longitude = Longitude::new(-134.4197222).unwrap();
     let elevation = Elevation::new(87.).unwrap();
@@ -250,7 +247,7 @@ fn test_juneau_ak_default_params_sev_day_fajr_isha_always() {
 fn test_juneau_ak_default_params_sev_day_fajr_isha_inv() {
     // Arrange
     let mut params = Params::default();
-    params.ext_lat_method = ExtremeLatitudeMethod::SeventhOfDayFajrIshaInvalid;
+    params.extreme_latitude_method = ExtremeLatitudeMethod::SeventhOfDayFajrIshaInvalid;
     let latitude = Latitude::new(58.3019444).unwrap();
     let longitude = Longitude::new(-134.4197222).unwrap();
     let elevation = Elevation::new(87.).unwrap();
@@ -290,7 +287,7 @@ fn test_juneau_ak_default_params_sev_day_fajr_isha_inv() {
 fn test_juneau_ak_default_params_sev_night_fajr_isha_always() {
     // Arrange
     let mut params = Params::default();
-    params.ext_lat_method = ExtremeLatitudeMethod::SeventhOfNightFajrIshaAlways;
+    params.extreme_latitude_method = ExtremeLatitudeMethod::SeventhOfNightFajrIshaAlways;
     let latitude = Latitude::new(58.3019444).unwrap();
     let longitude = Longitude::new(-134.4197222).unwrap();
     let elevation = Elevation::new(87.).unwrap();
@@ -330,7 +327,7 @@ fn test_juneau_ak_default_params_sev_night_fajr_isha_always() {
 fn test_juneau_ak_default_params_sev_night_fajr_isha_inv() {
     // Arrange
     let mut params = Params::default();
-    params.ext_lat_method = ExtremeLatitudeMethod::SeventhOfNightFajrIshaInvalid;
+    params.extreme_latitude_method = ExtremeLatitudeMethod::SeventhOfNightFajrIshaInvalid;
     let latitude = Latitude::new(58.3019444).unwrap();
     let longitude = Longitude::new(-134.4197222).unwrap();
     let elevation = Elevation::new(87.).unwrap();
@@ -372,7 +369,7 @@ fn test_juneau_ak_default_params_half_night_fajr_isha_always() {
 
     // Arrange
     let mut params = Params::default();
-    params.ext_lat_method = ExtremeLatitudeMethod::HalfOfNightFajrIshaAlways;
+    params.extreme_latitude_method = ExtremeLatitudeMethod::HalfOfNightFajrIshaAlways;
     *params.intervals.get_mut(&Fajr).unwrap() = -10.;
     *params.intervals.get_mut(&Isha).unwrap() = -10.;
     let latitude = Latitude::new(58.3019444).unwrap();
@@ -416,7 +413,7 @@ fn test_juneau_ak_default_params_half_night_fajr_isha_inv() {
 
     // Arrange
     let mut params = Params::default();
-    params.ext_lat_method = ExtremeLatitudeMethod::HalfOfNightFajrIshaInvalid;
+    params.extreme_latitude_method = ExtremeLatitudeMethod::HalfOfNightFajrIshaInvalid;
     *params.intervals.get_mut(&Fajr).unwrap() = -10.;
     *params.intervals.get_mut(&Isha).unwrap() = -10.;
     let latitude = Latitude::new(58.3019444).unwrap();
@@ -460,7 +457,7 @@ fn test_juneau_ak_default_params_mins_from_fajr_isha_always() {
 
     // Arrange
     let mut params = Params::default();
-    params.ext_lat_method = ExtremeLatitudeMethod::MinutesFromMaghribFajrIshaAlways;
+    params.extreme_latitude_method = ExtremeLatitudeMethod::MinutesFromMaghribFajrIshaAlways;
     *params.intervals.get_mut(&Fajr).unwrap() = 10.;
     *params.intervals.get_mut(&Isha).unwrap() = 10.;
     let latitude = Latitude::new(58.3019444).unwrap();
@@ -504,7 +501,7 @@ fn test_juneau_ak_default_params_mins_from_fajr_isha_inv() {
 
     // Arrange
     let mut params = Params::default();
-    params.ext_lat_method = ExtremeLatitudeMethod::MinutesFromMaghribFajrIshaInvalid;
+    params.extreme_latitude_method = ExtremeLatitudeMethod::MinutesFromMaghribFajrIshaInvalid;
     *params.intervals.get_mut(&Fajr).unwrap() = 10.;
     *params.intervals.get_mut(&Isha).unwrap() = 10.;
     let latitude = Latitude::new(58.3019444).unwrap();

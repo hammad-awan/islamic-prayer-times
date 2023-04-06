@@ -67,10 +67,51 @@ fn test_cairo_eg_default_params_egyptian() {
 
     // Assert
     let imsaak = pts.get(&Imsaak).unwrap().unwrap();
-    assert_eq!(NaiveTime::from_hms_opt(5, 1, 0).unwrap(), imsaak.time);
+    assert_eq!(NaiveTime::from_hms_opt(4, 56, 0).unwrap(), imsaak.time);
     assert_eq!(false, imsaak.extreme);
     let fajr = pts.get(&Fajr).unwrap().unwrap();
-    assert_eq!(NaiveTime::from_hms_opt(5, 8, 0).unwrap(), fajr.time);
+    assert_eq!(NaiveTime::from_hms_opt(5, 3, 0).unwrap(), fajr.time);
+    assert_eq!(false, fajr.extreme);
+    let shurooq = pts.get(&Shurooq).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(6, 32, 0).unwrap(), shurooq.time);
+    assert_eq!(false, shurooq.extreme);
+    let dhuhr = pts.get(&Dhuhr).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(12, 9, 0).unwrap(), dhuhr.time);
+    assert_eq!(false, dhuhr.extreme);
+    let asr = pts.get(&Asr).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(15, 20, 0).unwrap(), asr.time);
+    assert_eq!(false, asr.extreme);
+    let maghrib = pts.get(&Maghrib).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(17, 46, 0).unwrap(), maghrib.time);
+    assert_eq!(false, maghrib.extreme);
+    let isha = pts.get(&Isha).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(19, 5, 0).unwrap(), isha.time);
+    assert_eq!(false, isha.extreme);
+}
+
+#[test]
+fn test_cairo_eg_default_params_egypt() {
+    use Prayer::*;
+
+    // Arrange
+    let params = Params::new(Method::Egypt);
+    let latitude = Latitude::new(30.0444).unwrap();
+    let longitude = Longitude::new(31.2357).unwrap();
+    let elevation = Elevation::new(75.).unwrap();
+    let coords = Coordinates::new(latitude, longitude, elevation);
+    let gmt = Gmt::new(2.).unwrap();
+    let location = Location { coords, gmt };
+    let date = NaiveDate::from_ymd_opt(2023, 2, 18).unwrap();
+
+    // Act
+    let pts = prayer_times_dt(&params, location, date, None);
+
+    // Assert
+    let imsaak = pts.get(&Imsaak).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(4, 59, 0).unwrap(), imsaak.time);
+    assert_eq!(false, imsaak.extreme);
+    let fajr = pts.get(&Fajr).unwrap().unwrap();
+    assert_eq!(NaiveTime::from_hms_opt(5, 6, 0).unwrap(), fajr.time);
     assert_eq!(false, fajr.extreme);
     let shurooq = pts.get(&Shurooq).unwrap().unwrap();
     assert_eq!(NaiveTime::from_hms_opt(6, 32, 0).unwrap(), shurooq.time);

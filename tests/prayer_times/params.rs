@@ -8,7 +8,6 @@ use islamic_prayer_times::{
 
 #[test]
 fn test_default() {
-    use Method::*;
     use Prayer::*;
 
     // Arrange
@@ -16,7 +15,6 @@ fn test_default() {
     let params = Params::default();
     // Assert
     assert_default(&params);
-    assert_eq!(Isna, params.method);
     assert_eq!(AsrShadowRatio::Shafi, params.asr_shadow_ratio);
     assert_eq!(15.0, params.angles[&Fajr]);
     assert_eq!(15.0, params.angles[&Isha]);
@@ -34,7 +32,6 @@ fn test_method_none() {
     let params = Params::new(None);
     // Assert
     assert_default(&params);
-    assert_eq!(None, params.method);
     assert_eq!(0., params.angles[&Fajr]);
     assert_eq!(0., params.angles[&Isha]);
     assert_eq!(0., params.intervals[&Isha]);
@@ -51,8 +48,23 @@ fn test_method_egyptian() {
     let params = Params::new(Egyptian);
     // Assert
     assert_default(&params);
-    assert_eq!(Egyptian, params.method);
-    assert_eq!(19., params.angles[&Fajr]);
+    assert_eq!(20., params.angles[&Fajr]);
+    assert_eq!(18., params.angles[&Isha]);
+    assert_eq!(0., params.intervals[&Isha]);
+    assert_eq!(AsrShadowRatio::Shafi, params.asr_shadow_ratio);
+}
+
+#[test]
+fn test_method_egypt() {
+    use Method::*;
+    use Prayer::*;
+
+    // Arrange
+    // Act
+    let params = Params::new(Egypt);
+    // Assert
+    assert_default(&params);
+    assert_eq!(19.5, params.angles[&Fajr]);
     assert_eq!(17.5, params.angles[&Isha]);
     assert_eq!(0., params.intervals[&Isha]);
     assert_eq!(AsrShadowRatio::Shafi, params.asr_shadow_ratio);
@@ -67,7 +79,6 @@ fn test_method_shafi() {
     // Act
     let params = Params::new(Shafi);
     // Assert
-    assert_eq!(Shafi, params.method);
     assert_eq!(18., params.angles[&Fajr]);
     assert_eq!(18., params.angles[&Isha]);
     assert_eq!(0., params.intervals[&Isha]);
@@ -84,11 +95,26 @@ fn test_method_hanafi() {
     let params = Params::new(Hanafi);
     // Assert
     assert_default(&params);
-    assert_eq!(Hanafi, params.method);
     assert_eq!(18., params.angles[&Fajr]);
     assert_eq!(18., params.angles[&Isha]);
     assert_eq!(0., params.intervals[&Isha]);
     assert_eq!(AsrShadowRatio::Hanafi, params.asr_shadow_ratio);
+}
+
+#[test]
+fn test_method_isna() {
+    use Method::*;
+    use Prayer::*;
+
+    // Arrange
+    // Act
+    let params = Params::new(Isna);
+    // Assert
+    assert_default(&params);
+    assert_eq!(15., params.angles[&Fajr]);
+    assert_eq!(15., params.angles[&Isha]);
+    assert_eq!(0., params.intervals[&Isha]);
+    assert_eq!(AsrShadowRatio::Shafi, params.asr_shadow_ratio);
 }
 
 #[test]
@@ -101,7 +127,6 @@ fn test_method_mwl() {
     let params = Params::new(Mwl);
     // Assert
     assert_default(&params);
-    assert_eq!(Mwl, params.method);
     assert_eq!(18., params.angles[&Fajr]);
     assert_eq!(17., params.angles[&Isha]);
     assert_eq!(0., params.intervals[&Isha]);
@@ -118,7 +143,6 @@ fn test_method_umm_al_qurra() {
     let params = Params::new(UmmAlQurra);
     // Assert
     assert_default(&params);
-    assert_eq!(UmmAlQurra, params.method);
     assert_eq!(18., params.angles[&Fajr]);
     assert_eq!(0., params.angles[&Isha]);
     assert_eq!(90., params.intervals[&Isha]);
@@ -135,7 +159,6 @@ fn test_method_fixed_isha() {
     let params = Params::new(FixedIsha);
     // Assert
     assert_default(&params);
-    assert_eq!(FixedIsha, params.method);
     assert_eq!(19.5, params.angles[&Fajr]);
     assert_eq!(0., params.angles[&Isha]);
     assert_eq!(90., params.intervals[&Isha]);
@@ -150,14 +173,17 @@ fn assert_default(params: &Params) {
     assert_eq!(Params::DEF_IMSAAK_ANGLE, params.angles[&Imsaak]);
     assert_eq!(0., params.intervals[&Imsaak]);
     assert_eq!(0., params.intervals[&Fajr]);
-    assert_eq!(0., params.min_offsets[&Imsaak]);
-    assert_eq!(0., params.min_offsets[&Fajr]);
-    assert_eq!(0., params.min_offsets[&Shurooq]);
-    assert_eq!(0., params.min_offsets[&Dhuhr]);
-    assert_eq!(0., params.min_offsets[&Asr]);
-    assert_eq!(0., params.min_offsets[&Maghrib]);
-    assert_eq!(0., params.min_offsets[&Isha]);
-    assert_eq!(Latitude::new(48.5).unwrap(), params.near_lat);
-    assert_eq!(NearestGoodDayFajrIshaInvalid, params.ext_lat_method);
+    assert_eq!(0., params.minutes[&Imsaak]);
+    assert_eq!(0., params.minutes[&Fajr]);
+    assert_eq!(0., params.minutes[&Shurooq]);
+    assert_eq!(0., params.minutes[&Dhuhr]);
+    assert_eq!(0., params.minutes[&Asr]);
+    assert_eq!(0., params.minutes[&Maghrib]);
+    assert_eq!(0., params.minutes[&Isha]);
+    assert_eq!(Latitude::new(48.5).unwrap(), params.nearest_latitude);
+    assert_eq!(
+        NearestGoodDayFajrIshaInvalid,
+        params.extreme_latitude_method
+    );
     assert_eq!(SpecialRounding, params.round_seconds);
 }

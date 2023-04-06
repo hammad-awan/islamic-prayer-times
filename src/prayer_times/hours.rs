@@ -225,7 +225,7 @@ pub fn hour_to_time(params: &Params, prayer: Prayer, hour: f64) -> NaiveTime {
     use Prayer::*;
     use RoundSeconds::*;
 
-    let mut hour = hour + params.min_offsets[&prayer] / MIN_SEC_PER_HR_MIN;
+    let mut hour = hour + params.minutes[&prayer] / MIN_SEC_PER_HR_MIN;
 
     if hour < 0. {
         while hour < 0. {

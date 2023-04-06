@@ -1,5 +1,7 @@
 pub mod params;
 
+pub use params::*;
+
 mod ext_lat;
 mod hours;
 
@@ -17,7 +19,7 @@ use crate::{
     prayer_times::{ext_lat::adj_for_ext_lat, hours::get_hours},
 };
 
-use self::{ext_lat::PrayerHour, hours::hour_to_time, params::Params};
+use self::{ext_lat::PrayerHour, hours::hour_to_time};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Prayer {
@@ -182,7 +184,7 @@ fn get_imsaak(
             params.intervals[&Imsaak]
         };
     } else if params.intervals[&Imsaak] != 0. {
-        *params_adj.min_offsets.get_mut(&Fajr).unwrap() -= params.intervals[&Imsaak];
+        *params_adj.minutes.get_mut(&Fajr).unwrap() -= params.intervals[&Imsaak];
     } else {
         *params_adj.angles.get_mut(&Fajr).unwrap() += params.angles[&Imsaak];
     }
@@ -191,7 +193,7 @@ fn get_imsaak(
     if let Ok(hour) = hours[&Fajr] {
         if hour.extreme {
             params_adj = params.clone();
-            *params_adj.min_offsets.get_mut(&Fajr).unwrap() -= if params.intervals[&Imsaak] == 0. {
+            *params_adj.minutes.get_mut(&Fajr).unwrap() -= if params.intervals[&Imsaak] == 0. {
                 Params::DEF_IMSAAK_ANGLE
             } else {
                 params.intervals[&Imsaak]
