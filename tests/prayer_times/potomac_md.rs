@@ -2,7 +2,7 @@ use chrono::{NaiveDate, NaiveTime};
 use islamic_prayer_times::{
     geo::coordinates::{Coordinates, Elevation, Gmt, Latitude, Longitude},
     prayer_times::{
-        params::{AsrShadowRatio, ExtremeLatitudeMethod, Params},
+        params::{AsrShadowRatio, ExtremeLatitudeMethod, Method, Params},
         prayer_times_dt, prayer_times_dt_rng, DateRange, Location, Prayer,
     },
 };
@@ -10,7 +10,7 @@ use islamic_prayer_times::{
 #[test]
 fn test_potomac_md_default_params() {
     // Arrange
-    let params = Params::default();
+    let params = Params::new(Method::Isna);
     let latitude = Latitude::new(39.0181651).unwrap();
     let longitude = Longitude::new(-77.2085914).unwrap();
     let elevation = Elevation::new(0.).unwrap();
@@ -104,7 +104,7 @@ fn test_potomac_md_default_params() {
 #[test]
 fn test_potomac_md_default_params_hanafi() {
     // Arrange
-    let mut params = Params::default();
+    let mut params = Params::new(Method::Isna);
     params.asr_shadow_ratio = AsrShadowRatio::Hanafi;
     let latitude = Latitude::new(39.0181651).unwrap();
     let longitude = Longitude::new(-77.2085914).unwrap();
@@ -144,7 +144,7 @@ fn test_potomac_md_default_params_hanafi() {
 #[test]
 fn test_potomac_md_default_params_ang_bas() {
     // Arrange
-    let mut params = Params::default();
+    let mut params = Params::new(Method::Isna);
     params.extreme_latitude_method = ExtremeLatitudeMethod::AngleBased;
     let latitude = Latitude::new(39.0181651).unwrap();
     let longitude = Longitude::new(-77.2085914).unwrap();
@@ -186,7 +186,7 @@ fn test_potomac_md_default_params_min_off() {
     use Prayer::*;
 
     // Arrange
-    let mut params = Params::default();
+    let mut params = Params::new(Method::Isna);
     *params.minutes.get_mut(&Imsaak).unwrap() = 1.;
     *params.minutes.get_mut(&Fajr).unwrap() = 1.;
     *params.minutes.get_mut(&Shurooq).unwrap() = 1.;

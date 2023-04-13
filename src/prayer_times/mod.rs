@@ -10,7 +10,7 @@ use std::{collections::HashMap, mem::swap};
 use chrono::{NaiveDate, NaiveTime};
 
 use crate::{
-    error::OutOfRange,
+    error::OutOfRangeError,
     geo::{
         astro::TopAstroDay,
         coordinates::{Coordinates, Gmt},
@@ -21,17 +21,26 @@ use crate::{
 
 use self::{ext_lat::PrayerHour, hours::hour_to_time};
 
+/// An enumeration of Islamic prayer and other related times.
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Prayer {
-    Fajr,
-    Shurooq,
-    Dhuhr,
-    Asr,
-    Maghrib,
-    Isha,
+    /// Some minutes before Fajr
     Imsaak,
+    /// Dawn
+    Fajr,
+    /// Sunrise
+    Shurooq,
+    /// Noon
+    Dhuhr,
+    /// Afternoon
+    Asr,
+    /// Sunset
+    Maghrib,
+    /// Night
+    Isha,
 }
 
+/// A simple date range.
 #[derive(Debug, Clone, Copy)]
 pub struct DateRange {
     start_date: NaiveDate,
@@ -39,6 +48,32 @@ pub struct DateRange {
 }
 
 impl DateRange {
+    /// Creates a new `DateRange` with the specified start and end date.
+    /// If the specified start date is after the end date, the start date
+    /// is used as the end date and vice versa.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use chrono::NaiveDate;
+    /// use islamic_prayer_times::DateRange;
+    ///
+    /// let mut start_date = NaiveDate::from_ymd_opt(2023, 1, 1).unwrap();
+    /// let mut end_date = NaiveDate::from_ymd_opt(2023, 1, 31).unwrap();
+    /// let mut date_range = DateRange::new(start_date, end_date);
+    ///
+    /// assert_eq!(date_range.start_date(), start_date);
+    /// assert_eq!(date_range.end_date(), end_date);
+    ///
+    /// let temp_date = start_date;
+    /// start_date = end_date;
+    /// end_date = temp_date;
+    ///
+    /// date_range = DateRange::new(start_date, end_date);
+    ///
+    /// assert_eq!(date_range.start_date(), end_date);
+    /// assert_eq!(date_range.end_date(), start_date);
+    /// ```
     pub fn new(mut start_date: NaiveDate, mut end_date: NaiveDate) -> Self {
         if start_date > end_date {
             swap(&mut start_date, &mut end_date);
@@ -49,23 +84,54 @@ impl DateRange {
             end_date,
         }
     }
+
+    /// Returns the start date of the `DateRange`.
+    pub fn start_date(&self) -> NaiveDate {
+        self.start_date
+    }
+
+    /// Returns the end date of the `DateRange`.
+    pub fn end_date(&self) -> NaiveDate {
+        self.end_date
+    }
 }
 
+/// A location specified by geographical [`Coordinates`](super::geo::coordinates::Coordinates) and [`Gmt`](super::geo::coordinates::Gmt) time.
 #[derive(Debug, Clone, Copy)]
 pub struct Location {
+    /// Geographical coordinates of the location.
     pub coords: Coordinates,
+    /// Greenwich Mean Time of the location.
     pub gmt: Gmt,
 }
 
+/// An atmospheric pressure in millibars.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Pressure(f64);
 
 impl Pressure {
-    pub fn new(pressure: f64) -> Result<Self, OutOfRange> {
+    /// Tries to return an instance of `Pressure` type.
+    ///
+    /// # Errors
+    ///
+    /// If a value is not within the range 100 to 1050 millibars, then an [`OutOfRangeError`] is returned.
+    ///
+    /// # Examples
+    /// ```
+    /// use islamic_prayer_times::{OutOfRangeError, Pressure};
+    ///
+    /// let pressure = Pressure::new(1000.).unwrap();
+    /// assert_eq!(1000., f64::from(pressure));
+    ///
+    /// let pressure = Pressure::new(2000.);
+    /// assert!(pressure.is_err());
+    /// assert_eq!(OutOfRangeError, pressure.err().unwrap());
+    /// ```
+    pub fn new(pressure: f64) -> Result<Self, OutOfRangeError> {
         if (100. ..=1050.).contains(&pressure) {
             Ok(Self(pressure))
         } else {
-            Err(OutOfRange)
+            Err(OutOfRangeError)
         }
     }
 }
@@ -76,15 +142,33 @@ impl From<Pressure> for f64 {
     }
 }
 
+/// An outside temperature in degrees Celcius.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Temperature(f64);
 
 impl Temperature {
-    pub fn new(temperature: f64) -> Result<Self, OutOfRange> {
+    /// Tries to return an instance of `Temperature` type.
+    ///
+    /// # Errors
+    ///
+    /// If a value is not within the range -90 to 57 degrees Celcius, then an [`OutOfRangeError`] is returned.
+    ///
+    /// # Examples
+    /// ```
+    /// use islamic_prayer_times::{OutOfRangeError, Temperature};
+    ///
+    /// let temperature = Temperature::new(10.).unwrap();
+    /// assert_eq!(10., f64::from(temperature));
+    ///
+    /// let temperature = Temperature::new(100.);
+    /// assert!(temperature.is_err());
+    /// assert_eq!(OutOfRangeError, temperature.err().unwrap());
+    /// ```
+    pub fn new(temperature: f64) -> Result<Self, OutOfRangeError> {
         if (-90. ..=57.).contains(&temperature) {
             Ok(Self(temperature))
         } else {
-            Err(OutOfRange)
+            Err(OutOfRangeError)
         }
     }
 }
@@ -95,9 +179,12 @@ impl From<Temperature> for f64 {
     }
 }
 
+/// Current weather as specified by [`Pressure`] and [`Temperature`].
 #[derive(Debug, Clone, Copy)]
 pub struct Weather {
+    /// Atmospheric pressure
     pub pressure: Pressure,
+    /// Outside temperature
     pub temperature: Temperature,
 }
 
@@ -110,12 +197,46 @@ impl Default for Weather {
     }
 }
 
+/// A calculated Islamic [`Prayer`] time that is possibly considered extreme.
+///
+/// See [`params` module level documentation](params) for more information on extreme latitude
+/// calculation.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PrayerTime {
+    /// The daily prayer time.
     pub time: NaiveTime,
+    /// An extreme latitude method was used to calculate the prayer time.
     pub extreme: bool,
 }
 
+/// Returns a [`map`] of [`NaiveDate`](chrono::NaiveDate) keys to a [`map`] of [`Prayer`] keys to [`PrayerTime`] values
+/// using the specified [`Params`](params::Params) for a [`Location`] and [`DateRange`].
+///
+/// [`map`]: std::collections::HashMap
+///
+/// # Examples
+///
+/// ```
+/// use chrono::NaiveDate;
+/// use islamic_prayer_times::*;
+///
+/// let params = Params::default();
+/// let latitude = Latitude::new(39.).unwrap();
+/// let longitude = Longitude::new(-77.).unwrap();
+/// let elevation = Elevation::new(0.).unwrap();
+/// let coords = Coordinates::new(latitude, longitude, elevation);
+/// let gmt = Gmt::new(-5.).unwrap();
+/// let location = Location { coords, gmt };
+/// let start_date = NaiveDate::from_ymd_opt(2023, 1, 1).unwrap();
+/// let end_date = NaiveDate::from_ymd_opt(2023, 1, 31).unwrap();
+/// let date_range = DateRange::new(start_date, end_date);
+///
+/// let prayer_times_rng = prayer_times_dt_rng(&params, location, date_range);
+/// let prayer_times_date = prayer_times_rng.get(&start_date).unwrap();
+///
+/// assert_eq!(31, prayer_times_rng.len());
+/// assert_eq!(7, prayer_times_date.len());
+/// ```
 pub fn prayer_times_dt_rng(
     params: &Params,
     location: Location,
@@ -132,6 +253,28 @@ pub fn prayer_times_dt_rng(
     times
 }
 
+/// Returns a [`map`](std::collections::HashMap) of [`Prayer`] keys to [`PrayerTime`] values using the specified
+/// [`Params`](params::Params) for a [`Location`], [`date`](chrono::NaiveDate), and its (optional) current [`Weather`].
+///
+/// # Examples
+///
+/// ```
+/// use chrono::NaiveDate;
+/// use islamic_prayer_times::*;
+///
+/// let params = Params::default();
+/// let latitude = Latitude::new(39.).unwrap();
+/// let longitude = Longitude::new(-77.).unwrap();
+/// let elevation = Elevation::new(0.).unwrap();
+/// let coords = Coordinates::new(latitude, longitude, elevation);
+/// let gmt = Gmt::new(-5.).unwrap();
+/// let location = Location { coords, gmt };
+/// let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
+///
+/// let prayer_times = prayer_times_dt(&params, location, date, None);
+///
+/// assert_eq!(7, prayer_times.len());
+/// ```
 pub fn prayer_times_dt(
     params: &Params,
     location: Location,

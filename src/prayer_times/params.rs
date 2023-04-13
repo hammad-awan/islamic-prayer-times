@@ -3,65 +3,66 @@
 //! Type [`Params`] represents a set of configurable fields used in the calculation of Islamic prayer times:
 //!
 //! * [`Round Seconds`] represents how to round up a prayer time to the nearest minute when a specific
-//! threshold of seconds is exceeded for a set of prayer times
-//! * [`Asr Shadow Ratio`] represents the Fiqh school to use when calculating Asr prayer time
+//! threshold of seconds is exceeded for a set of prayer times.
+//! * [`Asr Shadow Ratio`] represents the Fiqh school to use when calculating Asr prayer time.
 //! * [`Extreme Latitude Method`] represents how to adjust a prayer time when its conventional calculation
-//! results in an invalid value due to an extreme latitude for a set of prayer times
+//! results in an invalid value due to an extreme latitude for a set of prayer times.
 //! * The [`Nearest Latitude`] in degrees to use when [`Extreme Latitude Method`] is set to either:
 //!     * [`Nearest Latitude All Prayers Always`](ExtremeLatitudeMethod::NearestLatitudeAllPrayersAlways)
 //!     * [`Nearest Latitude Fajr Isha Always`](ExtremeLatitudeMethod::NearestLatitudeFajrIshaAlways)
 //!     * [`Nearest Latitude Fajr Isha Invalid`](ExtremeLatitudeMethod::NearestLatitudeFajrIshaInvalid)
-//! * [`Angles`] is a [`Hashmap`] of [`Prayer`] keys to angle values in degrees
-//! * [`Intervals`] is a [`Hashmap`] of [`Prayer`] keys to interval values in minutes
-//! * [`Minutes`] is a [`Hashmap`] of [`Prayer`] keys to minute values used to adjust a calculated
+//! * [`Angles`] is a [`map`] of [`Prayer`] keys to angle values in degrees.
+//! * [`Intervals`] is a [`map`] of [`Prayer`] keys to interval values in minutes.
+//! * [`Minutes`] is a [`map`] of [`Prayer`] keys to minute values used to adjust a calculated
 //! prayer time by the keyed value when it is not approximate enough.
 //!
-//! Type [`Params`] is constructed using [`new`](Params::new) by providing it a Fiqh [`Method`]
+//! Type [`Params`] is instantiated using [`new`](Params::new) by providing it a Fiqh [`Method`]
 //! to initialize an instance of the type to the desired Fiqh school values. Fiqh [`Method`]
-//! [`None`](Method::None) represents the initial values set by the method. All other enumerations of
-//! [`Method`] effectively override these values.
+//! [`None`](Method::None) represents the initial values set by the method and the [`Default`]
+//! value of [`Params`] is instantiated using it. All other enumerations of [`Method`] effectively
+//! override these values.
 //!
 //! # Initialization
 //!
 //! [`None`](Method::None)
 //! * [`Nearest Latitude`] is set to a [`Latitude`] of 48.5.
-//! * [`Round Seconds`] is set to [`Special Rounding`](RoundSeconds::SpecialRounding)
-//! * [`Asr Shadow Ratio`] is set to [`Shafi`](AsrShadowRatio::Shafi)
-//! * [`Extreme Latitude Method`] is set to [`Nearest Good Day Fajr Isha Invalid`](ExtremeLatitudeMethod::NearestGoodDayFajrIshaInvalid)
-//! * [`Angles`], [`Intervals`], and [`Minutes`] [`HashMap`]s have their [`Prayer`] values set to 0.
+//! * [`Round Seconds`] is set to [`Special Rounding`](RoundSeconds::SpecialRounding).
+//! * [`Asr Shadow Ratio`] is set to [`Shafi`](AsrShadowRatio::Shafi).
+//! * [`Extreme Latitude Method`] is set to [`Nearest Good Day Fajr Isha Invalid`](ExtremeLatitudeMethod::NearestGoodDayFajrIshaInvalid).
+//! * [`Angles`], [`Intervals`], and [`Minutes`] [`map`]s have their [`Prayer`] values set to 0.
 //!
 //! [`Egyptian`](Method::Egyptian)
-//! * [`Angles`] for [`Fajr`] is set to 20
-//! * [`Angles`] for [`Isha`] is set to 18
+//! * [`Angles`] for [`Fajr`] is set to 20.
+//! * [`Angles`] for [`Isha`] is set to 18.
 //!
 //! [`Egypt`](Method::Egypt)
-//! * [`Angles`] for [`Fajr`] is set to 19.5
-//! * [`Angles`] for [`Isha`] is set to 17.5
+//! * [`Angles`] for [`Fajr`] is set to 19.5.
+//! * [`Angles`] for [`Isha`] is set to 17.5.
 //!
 //! [`Shafi`](Method::Shafi)
-//! * [`Angles`] for [`Fajr`] is set to 18
-//! * [`Angles`] for [`Isha`] is set to 18
+//! * [`Angles`] for [`Fajr`] is set to 18.
+//! * [`Angles`] for [`Isha`] is set to 18.
 //!
 //! [`Hanafi`](Method::Hanafi)
-//! * [`Angles`] for [`Fajr`] is set to 18
-//! * [`Angles`] for [`Isha`] is set to 18
-//! * [`Asr Shadow Ratio`] is set to [`Hanafi`](AsrShadowRatio::Hanafi)
+//! * [`Angles`] for [`Fajr`] is set to 18.
+//! * [`Angles`] for [`Isha`] is set to 18.
+//! * [`Asr Shadow Ratio`] is set to [`Hanafi`](AsrShadowRatio::Hanafi).
 //!
 //! [`Isna`](Method::Isna)
-//! * [`Angles`] for [`Fajr`] is set to 15
-//! * [`Angles`] for [`Isha`] is set to 15
+//! * [`Angles`] for [`Fajr`] is set to 15.
+//! * [`Angles`] for [`Isha`] is set to 15.
 //!
 //! [`Mwl`](Method::Mwl)
-//! * [`Angles`] for [`Fajr`] is set to 18
-//! * [`Angles`] for [`Isha`] is set to 17
+//! * [`Angles`] for [`Fajr`] is set to 18.
+//! * [`Angles`] for [`Isha`] is set to 17.
 //!
 //! [`UmmAlQurra`](Method::UmmAlQurra)
-//! * [`Angles`] for [`Fajr`] is set to 18
-//! * [`Intervals`] for [`Isha`] is set to 90 minutes after Maghrib prayer
+//! * [`Angles`] for [`Fajr`] is set to 18.
+//! * [`Intervals`] for [`Isha`] is set to 90 minutes after Maghrib prayer.
 //!
 //! [`FixedIsha`](Method::FixedIsha)
-//! * [`Angles`] for [`Fajr`] is set to  19.5
-//! * [`Intervals`] for [`Isha`] is set to  90 minutes after Maghrib prayer
+//! * [`Angles`] for [`Fajr`] is set to  19.5.
+//! * [`Intervals`] for [`Isha`] is set to  90 minutes after Maghrib prayer.
 //!
 //! The above Fiqh [`Method`] names are used in a very tentative manner as none of their
 //! respective organizations have been contacted to obtain the correct (or up-to-date)
@@ -90,7 +91,7 @@
 //!  
 //! [`Nearest Latitude`]: Params::nearest_latitude
 //! [`Extreme Latitude Method`]: Params::extreme_latitude_method
-//! [`HashMap`]: std::collections::HashMap
+//! [`map`]: std::collections::HashMap
 //! [`Latitude`]: crate::geo::coordinates::Latitude
 //! [`Round Seconds`]: RoundSeconds
 //! [`Asr Shadow Ratio`]: AsrShadowRatio
@@ -196,22 +197,22 @@ pub enum RoundSeconds {
     /// No rounding
     None,
     /// Round a prayer time up to the nearest minute if its seconds are greater than
-    /// or equal to 30
+    /// or equal to 30.
     NormalRounding,
-    /// Round a prayer time up to the nearest minute if its seconds are greater than
-    /// or equal to 30 and it is Fajr, Dhuhr, Asr, Maghrib, or Isha
+    /// Round a Fajr, Dhuhr, Asr, Maghrib, or Isha prayer time up to the nearest minute
+    /// if its seconds are greater than or equal to 30.
     SpecialRounding,
-    /// Round a prayer time up to the nearest minute if its seconds are greater than
-    /// or equal to 1 and it is Fajr, Dhuhr, Asr, Maghrib, or Isha
+    /// Round a Fajr, Dhuhr, Asr, Maghrib, or Isha prayer time up to the nearest minute
+    /// if its seconds are greater than or equal to 1.
     AggressiveRounding,
 }
 
 /// The `AsrShadowRatio` type. See [the module level documentation](self) for more.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AsrShadowRatio {
-    /// Shafi school for calculating Asr prayer time
+    /// Shafi school for calculating Asr prayer time.
     Shafi = 1,
-    /// Hanafi school for calculating Asr prayer time
+    /// Hanafi school for calculating Asr prayer time.
     Hanafi,
 }
 
@@ -228,6 +229,7 @@ pub struct Params {
 }
 
 impl Params {
+    /// Default Imsaak angle value.
     pub const DEF_IMSAAK_ANGLE: f64 = 1.5;
 
     /// Creates a new [`Params`] with default values according to Fiqh [`Method`].
@@ -236,7 +238,8 @@ impl Params {
     /// # Examples
     ///
     /// ```
-    /// # use islamic_prayer_times::*;
+    /// use islamic_prayer_times::{Method, Params, Prayer};
+    ///
     /// let params: Params = Params::new(Method::Isna);
     /// assert_eq!(15., params.angles[&Prayer::Fajr]);
     /// ```
@@ -320,6 +323,6 @@ impl Params {
 
 impl Default for Params {
     fn default() -> Self {
-        Self::new(Method::Isna)
+        Self::new(Method::None)
     }
 }

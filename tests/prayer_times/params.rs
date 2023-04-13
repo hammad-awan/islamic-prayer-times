@@ -15,9 +15,8 @@ fn test_default() {
     let params = Params::default();
     // Assert
     assert_default(&params);
-    assert_eq!(AsrShadowRatio::Shafi, params.asr_shadow_ratio);
-    assert_eq!(15.0, params.angles[&Fajr]);
-    assert_eq!(15.0, params.angles[&Isha]);
+    assert_eq!(0., params.angles[&Fajr]);
+    assert_eq!(0., params.angles[&Isha]);
     assert_eq!(0., params.intervals[&Isha]);
     assert_eq!(AsrShadowRatio::Shafi, params.asr_shadow_ratio);
 }

@@ -2,18 +2,18 @@ use std::fmt::Display;
 
 use crate::{
     angle::{PI_DEG, RIGHT_ANG_DEG},
-    error::OutOfRange,
+    error::OutOfRangeError,
 };
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Gmt(f64);
 
 impl Gmt {
-    pub fn new(gmt: f64) -> Result<Gmt, OutOfRange> {
+    pub fn new(gmt: f64) -> Result<Gmt, OutOfRangeError> {
         if (-12. ..=12.).contains(&gmt) {
             Ok(Gmt(gmt))
         } else {
-            Err(OutOfRange)
+            Err(OutOfRangeError)
         }
     }
 }
@@ -40,11 +40,11 @@ pub trait GeoAngle {
 pub struct Latitude(f64);
 
 impl Latitude {
-    pub fn new(degrees: f64) -> Result<Self, OutOfRange> {
+    pub fn new(degrees: f64) -> Result<Self, OutOfRangeError> {
         if (-RIGHT_ANG_DEG..=RIGHT_ANG_DEG).contains(&degrees) {
             Ok(Self(degrees))
         } else {
-            Err(OutOfRange)
+            Err(OutOfRangeError)
         }
     }
 }
@@ -84,11 +84,11 @@ impl Display for Latitude {
 pub struct Longitude(f64);
 
 impl Longitude {
-    pub fn new(degrees: f64) -> Result<Self, OutOfRange> {
+    pub fn new(degrees: f64) -> Result<Self, OutOfRangeError> {
         if (-PI_DEG..=PI_DEG).contains(&degrees) {
             Ok(Self(degrees))
         } else {
-            Err(OutOfRange)
+            Err(OutOfRangeError)
         }
     }
 }
@@ -131,11 +131,11 @@ impl Elevation {
     pub const MAX: f64 = 8848.;
     pub const MIN: f64 = -420.;
 
-    pub fn new(value: f64) -> Result<Self, OutOfRange> {
+    pub fn new(value: f64) -> Result<Self, OutOfRangeError> {
         if (Elevation::MIN..=Elevation::MAX).contains(&value) {
             Ok(Self(value))
         } else {
-            Err(OutOfRange)
+            Err(OutOfRangeError)
         }
     }
 }
