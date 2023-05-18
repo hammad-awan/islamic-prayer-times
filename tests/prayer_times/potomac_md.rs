@@ -13,7 +13,7 @@ fn test_potomac_md_default_params() {
     let params = Params::new(Method::Isna);
     let latitude = Latitude::new(39.0181651).unwrap();
     let longitude = Longitude::new(-77.2085914).unwrap();
-    let elevation = Elevation::new(0.).unwrap();
+    let elevation = Elevation::default();
     let coords = Coordinates::new(latitude, longitude, elevation);
     let gmt = Gmt::new(-5.).unwrap();
     let location = Location { coords, gmt };
@@ -108,7 +108,7 @@ fn test_potomac_md_default_params_hanafi() {
     params.asr_shadow_ratio = AsrShadowRatio::Hanafi;
     let latitude = Latitude::new(39.0181651).unwrap();
     let longitude = Longitude::new(-77.2085914).unwrap();
-    let elevation = Elevation::new(0.).unwrap();
+    let elevation = Elevation::default();
     let coords = Coordinates::new(latitude, longitude, elevation);
     let gmt = Gmt::new(-5.).unwrap();
     let location = Location { coords, gmt };
@@ -148,7 +148,7 @@ fn test_potomac_md_default_params_ang_bas() {
     params.extreme_latitude_method = ExtremeLatitudeMethod::AngleBased;
     let latitude = Latitude::new(39.0181651).unwrap();
     let longitude = Longitude::new(-77.2085914).unwrap();
-    let elevation = Elevation::new(0.).unwrap();
+    let elevation = Elevation::default();
     let coords = Coordinates::new(latitude, longitude, elevation);
     let gmt = Gmt::new(-5.).unwrap();
     let location = Location { coords, gmt };
@@ -196,7 +196,7 @@ fn test_potomac_md_default_params_min_off() {
     *params.minutes.get_mut(&Isha).unwrap() = 1.;
     let latitude = Latitude::new(39.0181651).unwrap();
     let longitude = Longitude::new(-77.2085914).unwrap();
-    let elevation = Elevation::new(0.).unwrap();
+    let elevation = Elevation::default();
     let coords = Coordinates::new(latitude, longitude, elevation);
     let gmt = Gmt::new(-5.).unwrap();
     let location = Location { coords, gmt };

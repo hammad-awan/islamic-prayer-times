@@ -39,6 +39,8 @@ pub trait GeoAngle {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Latitude(f64);
 
+pub const NEAREST_LATITUDE: Latitude = Latitude::nearest_latitude();
+
 impl Latitude {
     pub fn new(degrees: f64) -> Result<Self, OutOfRangeError> {
         if (-RIGHT_ANG_DEG..=RIGHT_ANG_DEG).contains(&degrees) {
@@ -46,6 +48,16 @@ impl Latitude {
         } else {
             Err(OutOfRangeError)
         }
+    }
+
+    const fn nearest_latitude() -> Self {
+        Self(48.5)
+    }
+}
+
+impl Default for Latitude {
+    fn default() -> Self {
+        Latitude::new(0.).unwrap()
     }
 }
 
@@ -93,6 +105,12 @@ impl Longitude {
     }
 }
 
+impl Default for Longitude {
+    fn default() -> Self {
+        Longitude::new(0.).unwrap()
+    }
+}
+
 impl GeoAngle for Longitude {
     fn direction(&self) -> Direction {
         if self.0 >= 0. {
@@ -137,6 +155,12 @@ impl Elevation {
         } else {
             Err(OutOfRangeError)
         }
+    }
+}
+
+impl Default for Elevation {
+    fn default() -> Self {
+        Elevation::new(0.).unwrap()
     }
 }
 

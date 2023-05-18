@@ -7,10 +7,6 @@
 //! * [`Asr Shadow Ratio`] represents the Fiqh school to use when calculating Asr prayer time.
 //! * [`Extreme Latitude Method`] represents how to adjust a prayer time when its conventional calculation
 //! results in an invalid value due to an extreme latitude for a set of prayer times.
-//! * The [`Nearest Latitude`] in degrees to use when [`Extreme Latitude Method`] is set to either:
-//!     * [`Nearest Latitude All Prayers Always`](ExtremeLatitudeMethod::NearestLatitudeAllPrayersAlways)
-//!     * [`Nearest Latitude Fajr Isha Always`](ExtremeLatitudeMethod::NearestLatitudeFajrIshaAlways)
-//!     * [`Nearest Latitude Fajr Isha Invalid`](ExtremeLatitudeMethod::NearestLatitudeFajrIshaInvalid)
 //! * [`Angles`] is a [`map`] of [`Prayer`] keys to angle values in degrees.
 //! * [`Intervals`] is a [`map`] of [`Prayer`] keys to interval values in minutes.
 //! * [`Minutes`] is a [`map`] of [`Prayer`] keys to minute values used to adjust a calculated
@@ -25,7 +21,6 @@
 //! # Initialization
 //!
 //! [`None`](Method::None)
-//! * [`Nearest Latitude`] is set to a [`Latitude`] of 48.5.
 //! * [`Round Seconds`] is set to [`Special Rounding`](RoundSeconds::SpecialRounding).
 //! * [`Asr Shadow Ratio`] is set to [`Shafi`](AsrShadowRatio::Shafi).
 //! * [`Extreme Latitude Method`] is set to [`Nearest Good Day Fajr Isha Invalid`](ExtremeLatitudeMethod::NearestGoodDayFajrIshaInvalid).
@@ -77,8 +72,7 @@
 //! adjust the prayer times if the calculation returns invalid value(s), which
 //! generally occur at latitudes of 49 degrees or above. The general categories are:
 //!
-//! * Nearest Good Day (Aqrab Al-Bilaad): Calculate prayer times using a safe latitude
-//! specified in [`Nearest Latitude`].
+//! * Nearest Latitude (Aqrab Al-Bilaad): Calculate prayer times using a nearest [`Latitude`].
 //! * Nearest Good Day (Aqrab Al-Ayyam): Determine the closest previous or next day
 //! where [`Fajr`] and [`Isha`] prayer times are both valid.
 //! * An amount of night or day: Unlike the above mentioned methods, the multiple
@@ -89,7 +83,6 @@
 //! times. This will set their calculated values to those of Shurooq and Maghrib respectively,
 //! then adjust them by minute vlaues found in their respective values in [`Intervals`].
 //!  
-//! [`Nearest Latitude`]: Params::nearest_latitude
 //! [`Extreme Latitude Method`]: Params::extreme_latitude_method
 //! [`map`]: std::collections::HashMap
 //! [`Latitude`]: crate::geo::coordinates::Latitude
@@ -160,13 +153,12 @@ pub enum ExtremeLatitudeMethod {
     /// Apply a portion of the night based on the angles for Fajr and Isha prayer
     /// times only if their calculated prayer times are invalid.
     AngleBased,
-    /// Apply [`Nearest Latitude`](Params::nearest_latitude) to all prayer times always.
-    NearestLatitudeAllPrayersAlways,
-    /// Apply [`Nearest Latitude`](Params::nearest_latitude) to Fajr and Isha prayer times always.
-    NearestLatitudeFajrIshaAlways,
-    /// Apply [`Nearest Latitude`](Params::nearest_latitude) only to an invalid Fajr or Isha
-    /// prayer time.
-    NearestLatitudeFajrIshaInvalid,
+    /// Apply the nearest `Latitude` to all prayer times always.
+    NearestLatitudeAllPrayersAlways(Latitude),
+    /// Apply the nearest `Latitude` to Fajr and Isha prayer times always.
+    NearestLatitudeFajrIshaAlways(Latitude),
+    /// Apply the nearest `Latitude` only to an invalid Fajr or Isha prayer time.
+    NearestLatitudeFajrIshaInvalid(Latitude),
     /// Apply nearest good day prayer time to all prayer times always.
     NearestGoodDayAllPrayersAlways,
     /// Apply nearest good day prayer time only to an invalid Fajr or Isha prayer time.
@@ -222,7 +214,6 @@ pub struct Params {
     pub round_seconds: RoundSeconds,
     pub asr_shadow_ratio: AsrShadowRatio,
     pub extreme_latitude_method: ExtremeLatitudeMethod,
-    pub nearest_latitude: Latitude,
     pub angles: HashMap<Prayer, f64>,
     pub intervals: HashMap<Prayer, f64>,
     pub minutes: HashMap<Prayer, f64>,
@@ -310,7 +301,6 @@ impl Params {
         }
 
         Self {
-            nearest_latitude: Latitude::new(48.5).unwrap(),
             round_seconds: SpecialRounding,
             asr_shadow_ratio,
             extreme_latitude_method: ExtremeLatitudeMethod::NearestGoodDayFajrIshaInvalid,

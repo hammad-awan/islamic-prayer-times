@@ -1,7 +1,7 @@
 use chrono::{NaiveDate, NaiveTime};
 use islamic_prayer_times::{
     prayer_times_dt, Coordinates, Elevation, ExtremeLatitudeMethod, Gmt, Latitude, Location,
-    Longitude, Method, Params, Prayer,
+    Longitude, Method, Params, Prayer, NEAREST_LATITUDE,
 };
 
 #[test]
@@ -87,7 +87,8 @@ fn test_juneau_ak_default_params_near_good_day_all_prayers_always() {
 fn test_juneau_ak_default_params_near_lat_all_prayers_always() {
     // Arrange
     let mut params = Params::new(Method::Isna);
-    params.extreme_latitude_method = ExtremeLatitudeMethod::NearestLatitudeAllPrayersAlways;
+    params.extreme_latitude_method =
+        ExtremeLatitudeMethod::NearestLatitudeAllPrayersAlways(NEAREST_LATITUDE);
     let latitude = Latitude::new(58.3019444).unwrap();
     let longitude = Longitude::new(-134.4197222).unwrap();
     let elevation = Elevation::new(87.).unwrap();
@@ -127,7 +128,8 @@ fn test_juneau_ak_default_params_near_lat_all_prayers_always() {
 fn test_juneau_ak_default_params_near_lat_fajr_isha_always() {
     // Arrange
     let mut params = Params::new(Method::Isna);
-    params.extreme_latitude_method = ExtremeLatitudeMethod::NearestLatitudeFajrIshaAlways;
+    params.extreme_latitude_method =
+        ExtremeLatitudeMethod::NearestLatitudeFajrIshaAlways(NEAREST_LATITUDE);
     let latitude = Latitude::new(58.3019444).unwrap();
     let longitude = Longitude::new(-134.4197222).unwrap();
     let elevation = Elevation::new(87.).unwrap();
@@ -167,7 +169,8 @@ fn test_juneau_ak_default_params_near_lat_fajr_isha_always() {
 fn test_juneau_ak_default_params_near_lat_fajr_isha_inv() {
     // Arrange
     let mut params = Params::new(Method::Isna);
-    params.extreme_latitude_method = ExtremeLatitudeMethod::NearestLatitudeFajrIshaInvalid;
+    params.extreme_latitude_method =
+        ExtremeLatitudeMethod::NearestLatitudeFajrIshaInvalid(NEAREST_LATITUDE);
     let latitude = Latitude::new(58.3019444).unwrap();
     let longitude = Longitude::new(-134.4197222).unwrap();
     let elevation = Elevation::new(87.).unwrap();

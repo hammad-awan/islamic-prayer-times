@@ -7,7 +7,7 @@ fn test() {
     let coords = Coordinates::new(
         Latitude::new(39.0181651).unwrap(),
         Longitude::new(-77.2085914).unwrap(),
-        Elevation::new(0.).unwrap(),
+        Elevation::default(),
     );
     let qibla = Qibla::new(coords);
     // Assert

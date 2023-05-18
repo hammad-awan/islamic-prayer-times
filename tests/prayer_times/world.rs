@@ -15,7 +15,7 @@ fn test_peurto_williams_cl_default_params_mwl() {
     let params = Params::new(Method::Mwl);
     let latitude = Latitude::new(-54.9352).unwrap();
     let longitude = Longitude::new(-67.6059).unwrap();
-    let elevation = Elevation::new(0.).unwrap();
+    let elevation = Elevation::default();
     let coords = Coordinates::new(latitude, longitude, elevation);
     let gmt = Gmt::new(-3.).unwrap();
     let location = Location { coords, gmt };

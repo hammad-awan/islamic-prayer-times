@@ -1,9 +1,6 @@
-use islamic_prayer_times::{
-    geo::coordinates::Latitude,
-    prayer_times::{
-        params::{AsrShadowRatio, ExtremeLatitudeMethod, Method, Params, RoundSeconds},
-        Prayer,
-    },
+use islamic_prayer_times::prayer_times::{
+    params::{AsrShadowRatio, ExtremeLatitudeMethod, Method, Params, RoundSeconds},
+    Prayer,
 };
 
 #[test]
@@ -179,7 +176,6 @@ fn assert_default(params: &Params) {
     assert_eq!(0., params.minutes[&Asr]);
     assert_eq!(0., params.minutes[&Maghrib]);
     assert_eq!(0., params.minutes[&Isha]);
-    assert_eq!(Latitude::new(48.5).unwrap(), params.nearest_latitude);
     assert_eq!(
         NearestGoodDayFajrIshaInvalid,
         params.extreme_latitude_method
