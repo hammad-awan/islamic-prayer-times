@@ -657,7 +657,7 @@ mod tests {
     fn should_new_astro() {
         // Arrange
         let date = NaiveDate::from_ymd_opt(2023, 1, 25).unwrap();
-        let julian_day = JulianDay::new(date, Gmt::new(-5.).unwrap());
+        let julian_day = JulianDay::new(date, Gmt::try_from(-5.).unwrap());
         // Act
         let astro = Astro::new(f64::from(julian_day));
         // Assert
@@ -672,7 +672,7 @@ mod tests {
     fn should_new_astro_day() {
         // Arrange
         let date = NaiveDate::from_ymd_opt(2023, 1, 25).unwrap();
-        let julian_day = JulianDay::new(date, Gmt::new(-5.).unwrap());
+        let julian_day = JulianDay::new(date, Gmt::try_from(-5.).unwrap());
         // Act
         let astro_day = AstroDay::new(julian_day);
         // Assert
@@ -759,11 +759,11 @@ mod tests {
     fn should_new_top_astro_day() {
         // Arrange
         let date = NaiveDate::from_ymd_opt(2023, 1, 25).unwrap();
-        let julian_day = JulianDay::new(date, Gmt::new(-5.).unwrap());
+        let julian_day = JulianDay::new(date, Gmt::try_from(-5.).unwrap());
         let astro_day = AstroDay::new(julian_day);
         let coords = Coordinates::new(
-            Latitude::new(39.0181651).unwrap(),
-            Longitude::new(-77.2085914).unwrap(),
+            Latitude::try_from(39.0181651).unwrap(),
+            Longitude::try_from(-77.2085914).unwrap(),
             Elevation::default(),
         );
         // Act

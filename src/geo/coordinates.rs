@@ -1,26 +1,45 @@
-use std::fmt::Display;
+use std::{fmt::Display, ops::RangeInclusive, str::FromStr};
 
 use crate::{
     angle::{PI_DEG, RIGHT_ANG_DEG},
-    error::OutOfRangeError,
+    error::{OutOfRangeError, ParseError},
+    Bounded, Parsable,
 };
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Gmt(f64);
 
-impl Gmt {
-    pub fn new(gmt: f64) -> Result<Gmt, OutOfRangeError> {
-        if (-12. ..=12.).contains(&gmt) {
-            Ok(Gmt(gmt))
-        } else {
-            Err(OutOfRangeError)
-        }
+impl Bounded<f64> for Gmt {
+    fn range() -> RangeInclusive<f64> {
+        -12. ..=12.
+    }
+
+    fn new(value: f64) -> Self {
+        Self(value)
+    }
+}
+
+impl TryFrom<f64> for Gmt {
+    type Error = OutOfRangeError<f64>;
+
+    fn try_from(value: f64) -> Result<Self, Self::Error> {
+        <Self as Bounded<f64>>::try_from(value)
     }
 }
 
 impl From<Gmt> for f64 {
     fn from(value: Gmt) -> Self {
         value.0
+    }
+}
+
+impl Parsable<f64> for Gmt {}
+
+impl FromStr for Gmt {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::parse(s)
     }
 }
 
@@ -42,22 +61,32 @@ pub struct Latitude(f64);
 pub const NEAREST_LATITUDE: Latitude = Latitude::nearest_latitude();
 
 impl Latitude {
-    pub fn new(degrees: f64) -> Result<Self, OutOfRangeError> {
-        if (-RIGHT_ANG_DEG..=RIGHT_ANG_DEG).contains(&degrees) {
-            Ok(Self(degrees))
-        } else {
-            Err(OutOfRangeError)
-        }
-    }
-
     const fn nearest_latitude() -> Self {
         Self(48.5)
     }
 }
 
+impl Bounded<f64> for Latitude {
+    fn range() -> RangeInclusive<f64> {
+        -RIGHT_ANG_DEG..=RIGHT_ANG_DEG
+    }
+
+    fn new(value: f64) -> Self {
+        Self(value)
+    }
+}
+
+impl TryFrom<f64> for Latitude {
+    type Error = OutOfRangeError<f64>;
+
+    fn try_from(value: f64) -> Result<Self, Self::Error> {
+        <Self as Bounded<f64>>::try_from(value)
+    }
+}
+
 impl Default for Latitude {
     fn default() -> Self {
-        Latitude::new(0.).unwrap()
+        Self(0.)
     }
 }
 
@@ -92,22 +121,40 @@ impl Display for Latitude {
     }
 }
 
+impl Parsable<f64> for Latitude {}
+
+impl FromStr for Latitude {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::parse(s)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Longitude(f64);
 
-impl Longitude {
-    pub fn new(degrees: f64) -> Result<Self, OutOfRangeError> {
-        if (-PI_DEG..=PI_DEG).contains(&degrees) {
-            Ok(Self(degrees))
-        } else {
-            Err(OutOfRangeError)
-        }
+impl Bounded<f64> for Longitude {
+    fn range() -> RangeInclusive<f64> {
+        -PI_DEG..=PI_DEG
+    }
+
+    fn new(value: f64) -> Self {
+        Self(value)
+    }
+}
+
+impl TryFrom<f64> for Longitude {
+    type Error = OutOfRangeError<f64>;
+
+    fn try_from(value: f64) -> Result<Self, Self::Error> {
+        <Self as Bounded<f64>>::try_from(value)
     }
 }
 
 impl Default for Longitude {
     fn default() -> Self {
-        Longitude::new(0.).unwrap()
+        Self(0.)
     }
 }
 
@@ -142,25 +189,40 @@ impl Display for Longitude {
     }
 }
 
+impl Parsable<f64> for Longitude {}
+
+impl FromStr for Longitude {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::parse(s)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Elevation(f64);
 
-impl Elevation {
-    pub const MAX: f64 = 8848.;
-    pub const MIN: f64 = -420.;
+impl Bounded<f64> for Elevation {
+    fn range() -> RangeInclusive<f64> {
+        -420. ..=8848.
+    }
 
-    pub fn new(value: f64) -> Result<Self, OutOfRangeError> {
-        if (Elevation::MIN..=Elevation::MAX).contains(&value) {
-            Ok(Self(value))
-        } else {
-            Err(OutOfRangeError)
-        }
+    fn new(value: f64) -> Self {
+        Self(value)
+    }
+}
+
+impl TryFrom<f64> for Elevation {
+    type Error = OutOfRangeError<f64>;
+
+    fn try_from(value: f64) -> Result<Self, Self::Error> {
+        <Self as Bounded<f64>>::try_from(value)
     }
 }
 
 impl Default for Elevation {
     fn default() -> Self {
-        Elevation::new(0.).unwrap()
+        Self(0.)
     }
 }
 
@@ -173,6 +235,16 @@ impl From<Elevation> for f64 {
 impl Display for Elevation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} meters", self.0.round())
+    }
+}
+
+impl Parsable<f64> for Elevation {}
+
+impl FromStr for Elevation {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::parse(s)
     }
 }
 

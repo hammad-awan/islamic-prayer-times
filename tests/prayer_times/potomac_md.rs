@@ -11,11 +11,11 @@ use islamic_prayer_times::{
 fn test_potomac_md_default_params() {
     // Arrange
     let params = Params::new(Method::Isna);
-    let latitude = Latitude::new(39.0181651).unwrap();
-    let longitude = Longitude::new(-77.2085914).unwrap();
+    let latitude = Latitude::try_from(39.0181651).unwrap();
+    let longitude = Longitude::try_from(-77.2085914).unwrap();
     let elevation = Elevation::default();
     let coords = Coordinates::new(latitude, longitude, elevation);
-    let gmt = Gmt::new(-5.).unwrap();
+    let gmt = Gmt::try_from(-5.).unwrap();
     let location = Location { coords, gmt };
     let start_date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
     let middle_date = NaiveDate::from_ymd_opt(2023, 2, 7).unwrap();
@@ -106,11 +106,11 @@ fn test_potomac_md_default_params_hanafi() {
     // Arrange
     let mut params = Params::new(Method::Isna);
     params.asr_shadow_ratio = AsrShadowRatio::Hanafi;
-    let latitude = Latitude::new(39.0181651).unwrap();
-    let longitude = Longitude::new(-77.2085914).unwrap();
+    let latitude = Latitude::try_from(39.0181651).unwrap();
+    let longitude = Longitude::try_from(-77.2085914).unwrap();
     let elevation = Elevation::default();
     let coords = Coordinates::new(latitude, longitude, elevation);
-    let gmt = Gmt::new(-5.).unwrap();
+    let gmt = Gmt::try_from(-5.).unwrap();
     let location = Location { coords, gmt };
     let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 
@@ -146,11 +146,11 @@ fn test_potomac_md_default_params_ang_bas() {
     // Arrange
     let mut params = Params::new(Method::Isna);
     params.extreme_latitude_method = ExtremeLatitudeMethod::AngleBased;
-    let latitude = Latitude::new(39.0181651).unwrap();
-    let longitude = Longitude::new(-77.2085914).unwrap();
+    let latitude = Latitude::try_from(39.0181651).unwrap();
+    let longitude = Longitude::try_from(-77.2085914).unwrap();
     let elevation = Elevation::default();
     let coords = Coordinates::new(latitude, longitude, elevation);
-    let gmt = Gmt::new(-5.).unwrap();
+    let gmt = Gmt::try_from(-5.).unwrap();
     let location = Location { coords, gmt };
     let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 
@@ -194,11 +194,11 @@ fn test_potomac_md_default_params_min_off() {
     *params.minutes.get_mut(&Asr).unwrap() = 1.;
     *params.minutes.get_mut(&Maghrib).unwrap() = 1.;
     *params.minutes.get_mut(&Isha).unwrap() = 1.;
-    let latitude = Latitude::new(39.0181651).unwrap();
-    let longitude = Longitude::new(-77.2085914).unwrap();
+    let latitude = Latitude::try_from(39.0181651).unwrap();
+    let longitude = Longitude::try_from(-77.2085914).unwrap();
     let elevation = Elevation::default();
     let coords = Coordinates::new(latitude, longitude, elevation);
-    let gmt = Gmt::new(-5.).unwrap();
+    let gmt = Gmt::try_from(-5.).unwrap();
     let location = Location { coords, gmt };
     let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 

@@ -13,11 +13,11 @@ fn test_peurto_williams_cl_default_params_mwl() {
 
     // Arrange
     let params = Params::new(Method::Mwl);
-    let latitude = Latitude::new(-54.9352).unwrap();
-    let longitude = Longitude::new(-67.6059).unwrap();
+    let latitude = Latitude::try_from(-54.9352).unwrap();
+    let longitude = Longitude::try_from(-67.6059).unwrap();
     let elevation = Elevation::default();
     let coords = Coordinates::new(latitude, longitude, elevation);
-    let gmt = Gmt::new(-3.).unwrap();
+    let gmt = Gmt::try_from(-3.).unwrap();
     let location = Location { coords, gmt };
     let date = NaiveDate::from_ymd_opt(2023, 2, 16).unwrap();
 
@@ -54,11 +54,11 @@ fn test_cairo_eg_default_params_egyptian() {
 
     // Arrange
     let params = Params::new(Method::Egyptian);
-    let latitude = Latitude::new(30.0444).unwrap();
-    let longitude = Longitude::new(31.2357).unwrap();
-    let elevation = Elevation::new(75.).unwrap();
+    let latitude = Latitude::try_from(30.0444).unwrap();
+    let longitude = Longitude::try_from(31.2357).unwrap();
+    let elevation = Elevation::try_from(75.).unwrap();
     let coords = Coordinates::new(latitude, longitude, elevation);
-    let gmt = Gmt::new(2.).unwrap();
+    let gmt = Gmt::try_from(2.).unwrap();
     let location = Location { coords, gmt };
     let date = NaiveDate::from_ymd_opt(2023, 2, 18).unwrap();
 
@@ -95,11 +95,11 @@ fn test_cairo_eg_default_params_egypt() {
 
     // Arrange
     let params = Params::new(Method::Egypt);
-    let latitude = Latitude::new(30.0444).unwrap();
-    let longitude = Longitude::new(31.2357).unwrap();
-    let elevation = Elevation::new(75.).unwrap();
+    let latitude = Latitude::try_from(30.0444).unwrap();
+    let longitude = Longitude::try_from(31.2357).unwrap();
+    let elevation = Elevation::try_from(75.).unwrap();
     let coords = Coordinates::new(latitude, longitude, elevation);
-    let gmt = Gmt::new(2.).unwrap();
+    let gmt = Gmt::try_from(2.).unwrap();
     let location = Location { coords, gmt };
     let date = NaiveDate::from_ymd_opt(2023, 2, 18).unwrap();
 
@@ -136,11 +136,11 @@ fn test_mecca_sa_default_params_umm_al_qurra() {
 
     // Arrange
     let params = Params::new(Method::UmmAlQurra);
-    let latitude = Latitude::new(21.3891).unwrap();
-    let longitude = Longitude::new(39.8579).unwrap();
-    let elevation = Elevation::new(909.).unwrap();
+    let latitude = Latitude::try_from(21.3891).unwrap();
+    let longitude = Longitude::try_from(39.8579).unwrap();
+    let elevation = Elevation::try_from(909.).unwrap();
     let coords = Coordinates::new(latitude, longitude, elevation);
-    let gmt = Gmt::new(3.).unwrap();
+    let gmt = Gmt::try_from(3.).unwrap();
     let location = Location { coords, gmt };
     let date = NaiveDate::from_ymd_opt(2023, 2, 19).unwrap();
 
@@ -177,11 +177,11 @@ fn test_dubai_uae_default_params_fixed_isha() {
 
     // Arrange
     let params = Params::new(Method::FixedIsha);
-    let latitude = Latitude::new(25.1649).unwrap();
-    let longitude = Longitude::new(55.4084).unwrap();
-    let elevation = Elevation::new(11.).unwrap();
+    let latitude = Latitude::try_from(25.1649).unwrap();
+    let longitude = Longitude::try_from(55.4084).unwrap();
+    let elevation = Elevation::try_from(11.).unwrap();
     let coords = Coordinates::new(latitude, longitude, elevation);
-    let gmt = Gmt::new(4.).unwrap();
+    let gmt = Gmt::try_from(4.).unwrap();
     let location = Location { coords, gmt };
     let date = NaiveDate::from_ymd_opt(2023, 2, 19).unwrap();
 
@@ -218,11 +218,11 @@ fn test_tehran_ir_default_params_shafi() {
 
     // Arrange
     let params = Params::new(Method::Shafi);
-    let latitude = Latitude::new(35.7219).unwrap();
-    let longitude = Longitude::new(51.3347).unwrap();
-    let elevation = Elevation::new(900.).unwrap();
+    let latitude = Latitude::try_from(35.7219).unwrap();
+    let longitude = Longitude::try_from(51.3347).unwrap();
+    let elevation = Elevation::try_from(900.).unwrap();
     let coords = Coordinates::new(latitude, longitude, elevation);
-    let gmt = Gmt::new(3.5).unwrap();
+    let gmt = Gmt::try_from(3.5).unwrap();
     let location = Location { coords, gmt };
     let date = NaiveDate::from_ymd_opt(2023, 2, 19).unwrap();
 
@@ -259,11 +259,11 @@ fn test_kabul_af_default_params_hanafi() {
 
     // Arrange
     let params = Params::new(Method::Hanafi);
-    let latitude = Latitude::new(34.5553).unwrap();
-    let longitude = Longitude::new(69.2075).unwrap();
-    let elevation = Elevation::new(1790.).unwrap();
+    let latitude = Latitude::try_from(34.5553).unwrap();
+    let longitude = Longitude::try_from(69.2075).unwrap();
+    let elevation = Elevation::try_from(1790.).unwrap();
     let coords = Coordinates::new(latitude, longitude, elevation);
-    let gmt = Gmt::new(4.5).unwrap();
+    let gmt = Gmt::try_from(4.5).unwrap();
     let location = Location { coords, gmt };
     let date = NaiveDate::from_ymd_opt(2023, 2, 19).unwrap();
 

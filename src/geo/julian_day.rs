@@ -76,7 +76,7 @@ mod tests {
         // Arrange
         let date = NaiveDate::from_ymd_opt(2022, 12, 4).unwrap();
         // Act
-        let julian_day = JulianDay::new(date, Gmt::new(-4.).unwrap());
+        let julian_day = JulianDay::new(date, Gmt::try_from(-4.).unwrap());
         // Assert
         assert_approx_eq!(
             f64,
@@ -91,7 +91,7 @@ mod tests {
     fn should_return_prev_julian_day() {
         // Arrange
         let date = NaiveDate::from_ymd_opt(2022, 12, 4).unwrap();
-        let julian_day = JulianDay::new(date, Gmt::new(-4.).unwrap());
+        let julian_day = JulianDay::new(date, Gmt::try_from(-4.).unwrap());
         // Act
         let prev_julian_day = julian_day.sub(1);
         // Assert
@@ -111,7 +111,7 @@ mod tests {
     fn should_return_next_julian_day() {
         // Arrange
         let date = NaiveDate::from_ymd_opt(2022, 12, 4).unwrap();
-        let julian_day = JulianDay::new(date, Gmt::new(-4.).unwrap());
+        let julian_day = JulianDay::new(date, Gmt::try_from(-4.).unwrap());
         // Act
         let new_julian_day = julian_day.add(1);
         // Assert

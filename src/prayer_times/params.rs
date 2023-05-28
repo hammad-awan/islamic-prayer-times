@@ -102,12 +102,14 @@
 
 use std::collections::HashMap;
 
+use clap::ValueEnum;
+
 use crate::geo::coordinates::Latitude;
 
 use super::Prayer;
 
 /// The `Method` type. See [the module level documentation](self) for more.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
 pub enum Method {
     /// None
     None,

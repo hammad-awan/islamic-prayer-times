@@ -99,6 +99,7 @@ impl Display for HijriMonth {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct HijriDate {
     date: NaiveDate,
     day: u8,
@@ -110,28 +111,6 @@ pub struct HijriDate {
 
 impl HijriDate {
     const HIJRI_EPOCH: i32 = 227015;
-
-    pub fn from(date: NaiveDate) -> Self {
-        let adj_date = if date.year() < 0 {
-            NaiveDate::from_ymd_opt(date.year() + 1, date.month(), date.day()).unwrap()
-        } else {
-            date
-        };
-        let greg_date = Self::greg_abs_date(adj_date);
-        let year = Self::hijri_year(greg_date);
-        let month = Self::month_val(greg_date, year);
-        let day = (greg_date - Self::hijri_abs_date(1, month, year) + 1) as u8;
-        let (year, pre_epoch) = Self::adj_pre_epoch(year);
-        let weekday = ((greg_date % 7).abs() + 1) as u8;
-        Self {
-            date,
-            year,
-            month,
-            day,
-            pre_epoch,
-            weekday,
-        }
-    }
 
     pub fn date(&self) -> NaiveDate {
         self.date
@@ -224,11 +203,35 @@ impl HijriDate {
     }
 }
 
+impl From<NaiveDate> for HijriDate {
+    fn from(value: NaiveDate) -> Self {
+        let adj_date = if value.year() < 0 {
+            NaiveDate::from_ymd_opt(value.year() + 1, value.month(), value.day()).unwrap()
+        } else {
+            value
+        };
+        let greg_date = Self::greg_abs_date(adj_date);
+        let year = Self::hijri_year(greg_date);
+        let month = Self::month_val(greg_date, year);
+        let day = (greg_date - Self::hijri_abs_date(1, month, year) + 1) as u8;
+        let (year, pre_epoch) = Self::adj_pre_epoch(year);
+        let weekday = ((greg_date % 7).abs() + 1) as u8;
+        Self {
+            date: value,
+            year,
+            month,
+            day,
+            pre_epoch,
+            weekday,
+        }
+    }
+}
+
 impl Display for HijriDate {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{} {} {}, {} {}",
+            "{}, {} {}, {} {}",
             self.day_of_week(),
             self.month(),
             self.day,

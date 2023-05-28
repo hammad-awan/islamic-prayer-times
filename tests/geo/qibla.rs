@@ -5,8 +5,8 @@ use islamic_prayer_times::geo::{coordinates::*, qibla::*};
 fn test() {
     // Arrange
     let coords = Coordinates::new(
-        Latitude::new(39.0181651).unwrap(),
-        Longitude::new(-77.2085914).unwrap(),
+        Latitude::try_from(39.0181651).unwrap(),
+        Longitude::try_from(-77.2085914).unwrap(),
         Elevation::default(),
     );
     let qibla = Qibla::new(coords);

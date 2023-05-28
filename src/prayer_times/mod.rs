@@ -5,9 +5,16 @@ pub use params::*;
 mod ext_lat;
 mod hours;
 
-use std::{collections::HashMap, mem::swap};
+use std::{
+    collections::{BTreeMap, HashMap},
+    fmt::Display,
+    mem::swap,
+    ops::RangeInclusive,
+};
 
 use chrono::{NaiveDate, NaiveTime};
+
+use strum::EnumIter;
 
 use crate::{
     error::OutOfRangeError,
@@ -17,12 +24,13 @@ use crate::{
         julian_day::JulianDay,
     },
     prayer_times::{ext_lat::adj_for_ext_lat, hours::get_hours},
+    Bounded,
 };
 
 use self::{ext_lat::PrayerHour, hours::hour_to_time};
 
 /// An enumeration of Islamic prayer and other related times.
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, EnumIter)]
 pub enum Prayer {
     /// Some minutes before Fajr
     Imsaak,
@@ -40,8 +48,14 @@ pub enum Prayer {
     Isha,
 }
 
+impl Display for Prayer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 /// A simple date range.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DateRange {
     start_date: NaiveDate,
     end_date: NaiveDate,
@@ -96,8 +110,14 @@ impl DateRange {
     }
 }
 
+impl Display for DateRange {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} - {}", self.start_date, self.end_date)
+    }
+}
+
 /// A location specified by geographical [`Coordinates`](super::geo::coordinates::Coordinates) and [`Gmt`](super::geo::coordinates::Gmt) time.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Location {
     /// Geographical coordinates of the location.
     pub coords: Coordinates,
@@ -109,30 +129,13 @@ pub struct Location {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Pressure(f64);
 
-impl Pressure {
-    /// Tries to return an instance of `Pressure` type.
-    ///
-    /// # Errors
-    ///
-    /// If a value is not within the range 100 to 1050 millibars, then an [`OutOfRangeError`] is returned.
-    ///
-    /// # Examples
-    /// ```
-    /// use islamic_prayer_times::{OutOfRangeError, Pressure};
-    ///
-    /// let pressure = Pressure::new(1000.).unwrap();
-    /// assert_eq!(1000., f64::from(pressure));
-    ///
-    /// let pressure = Pressure::new(2000.);
-    /// assert!(pressure.is_err());
-    /// assert_eq!(OutOfRangeError, pressure.err().unwrap());
-    /// ```
-    pub fn new(pressure: f64) -> Result<Self, OutOfRangeError> {
-        if (100. ..=1050.).contains(&pressure) {
-            Ok(Self(pressure))
-        } else {
-            Err(OutOfRangeError)
-        }
+impl Bounded<f64> for Pressure {
+    fn range() -> RangeInclusive<f64> {
+        100. ..=1050.
+    }
+
+    fn new(value: f64) -> Self {
+        Self(value)
     }
 }
 
@@ -142,40 +145,39 @@ impl From<Pressure> for f64 {
     }
 }
 
+impl TryFrom<f64> for Pressure {
+    type Error = OutOfRangeError<f64>;
+
+    fn try_from(value: f64) -> Result<Self, Self::Error> {
+        <Self as Bounded<f64>>::try_from(value)
+    }
+}
+
 /// An outside temperature in degrees Celcius.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Temperature(f64);
 
-impl Temperature {
-    /// Tries to return an instance of `Temperature` type.
-    ///
-    /// # Errors
-    ///
-    /// If a value is not within the range -90 to 57 degrees Celcius, then an [`OutOfRangeError`] is returned.
-    ///
-    /// # Examples
-    /// ```
-    /// use islamic_prayer_times::{OutOfRangeError, Temperature};
-    ///
-    /// let temperature = Temperature::new(10.).unwrap();
-    /// assert_eq!(10., f64::from(temperature));
-    ///
-    /// let temperature = Temperature::new(100.);
-    /// assert!(temperature.is_err());
-    /// assert_eq!(OutOfRangeError, temperature.err().unwrap());
-    /// ```
-    pub fn new(temperature: f64) -> Result<Self, OutOfRangeError> {
-        if (-90. ..=57.).contains(&temperature) {
-            Ok(Self(temperature))
-        } else {
-            Err(OutOfRangeError)
-        }
+impl Bounded<f64> for Temperature {
+    fn range() -> RangeInclusive<f64> {
+        -90. ..=57.
+    }
+
+    fn new(value: f64) -> Self {
+        Self(value)
     }
 }
 
 impl From<Temperature> for f64 {
     fn from(value: Temperature) -> Self {
         value.0
+    }
+}
+
+impl TryFrom<f64> for Temperature {
+    type Error = OutOfRangeError<f64>;
+
+    fn try_from(value: f64) -> Result<Self, Self::Error> {
+        <Self as Bounded<f64>>::try_from(value)
     }
 }
 
@@ -191,8 +193,8 @@ pub struct Weather {
 impl Default for Weather {
     fn default() -> Self {
         Self {
-            pressure: Pressure::new(1010.).unwrap(),
-            temperature: Temperature::new(14.).unwrap(),
+            pressure: <Pressure as TryFrom<f64>>::try_from(1010.).unwrap(),
+            temperature: <Temperature as TryFrom<f64>>::try_from(14.).unwrap(),
         }
     }
 }
@@ -209,10 +211,21 @@ pub struct PrayerTime {
     pub extreme: bool,
 }
 
-/// Returns a [`map`] of [`NaiveDate`](chrono::NaiveDate) keys to a [`map`] of [`Prayer`] keys to [`PrayerTime`] values
+impl Display for PrayerTime {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let fmt_time = self.time.format("%l:%M %p");
+        if self.extreme {
+            write!(f, "{} (extreme)", fmt_time)
+        } else {
+            write!(f, "{}", fmt_time)
+        }
+    }
+}
+
+/// Returns a [`B-tree`] of [`NaiveDate`](chrono::NaiveDate) keys to a [`map`] of [`Prayer`] keys to [`PrayerTime`] values
 /// using the specified [`Params`](params::Params) for a [`Location`] and [`DateRange`].
 ///
-/// [`map`]: std::collections::HashMap
+/// [`B-tree`]: std::collections::BTreeMap
 ///
 /// # Examples
 ///
@@ -221,11 +234,11 @@ pub struct PrayerTime {
 /// use islamic_prayer_times::*;
 ///
 /// let params = Params::default();
-/// let latitude = Latitude::new(39.).unwrap();
-/// let longitude = Longitude::new(-77.).unwrap();
-/// let elevation = Elevation::new(0.).unwrap();
+/// let latitude = Latitude::try_from(39.).unwrap();
+/// let longitude = Longitude::try_from(-77.).unwrap();
+/// let elevation = Elevation::try_from(0.).unwrap();
 /// let coords = Coordinates::new(latitude, longitude, elevation);
-/// let gmt = Gmt::new(-5.).unwrap();
+/// let gmt = Gmt::try_from(-5.).unwrap();
 /// let location = Location { coords, gmt };
 /// let start_date = NaiveDate::from_ymd_opt(2023, 1, 1).unwrap();
 /// let end_date = NaiveDate::from_ymd_opt(2023, 1, 31).unwrap();
@@ -241,10 +254,10 @@ pub fn prayer_times_dt_rng(
     params: &Params,
     location: Location,
     date_range: DateRange,
-) -> HashMap<NaiveDate, HashMap<Prayer, Result<PrayerTime, ()>>> {
+) -> BTreeMap<NaiveDate, HashMap<Prayer, Result<PrayerTime, ()>>> {
     let dur = date_range.end_date - date_range.start_date;
     let days = (dur.num_days() + 1) as usize;
-    let mut times = HashMap::with_capacity(days);
+    let mut times = BTreeMap::new();
     for date in date_range.start_date.iter_days().take(days) {
         let prayer_time = prayer_times_dt(params, location, date, None);
         times.insert(date, prayer_time);
@@ -263,11 +276,11 @@ pub fn prayer_times_dt_rng(
 /// use islamic_prayer_times::*;
 ///
 /// let params = Params::default();
-/// let latitude = Latitude::new(39.).unwrap();
-/// let longitude = Longitude::new(-77.).unwrap();
-/// let elevation = Elevation::new(0.).unwrap();
+/// let latitude = Latitude::try_from(39.).unwrap();
+/// let longitude = Longitude::try_from(-77.).unwrap();
+/// let elevation = Elevation::try_from(0.).unwrap();
 /// let coords = Coordinates::new(latitude, longitude, elevation);
-/// let gmt = Gmt::new(-5.).unwrap();
+/// let gmt = Gmt::try_from(-5.).unwrap();
 /// let location = Location { coords, gmt };
 /// let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 ///
