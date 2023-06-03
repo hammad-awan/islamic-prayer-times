@@ -20,10 +20,10 @@ fn test_potomac_md_default_params() {
     let start_date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
     let middle_date = NaiveDate::from_ymd_opt(2023, 2, 7).unwrap();
     let end_date = NaiveDate::from_ymd_opt(2023, 2, 8).unwrap();
-    let date_range = DateRange::new(start_date, end_date);
+    let date_range = DateRange::from(start_date..=end_date);
 
     // Act
-    let pts_by_day = prayer_times_dt_rng(&params, location, date_range);
+    let pts_by_day = prayer_times_dt_rng(&params, location, &date_range);
 
     // Assert
     assert_eq!(3, pts_by_day.len());

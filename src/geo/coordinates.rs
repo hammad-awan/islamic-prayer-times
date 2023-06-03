@@ -1,12 +1,15 @@
 use std::{fmt::Display, ops::RangeInclusive, str::FromStr};
 
+use serde::{Deserialize, Serialize};
+
 use crate::{
     angle::{PI_DEG, RIGHT_ANG_DEG},
     error::{OutOfRangeError, ParseError},
     Bounded, Parsable,
 };
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(try_from = "f64")]
 pub struct Gmt(f64);
 
 impl Bounded<f64> for Gmt {
@@ -55,7 +58,8 @@ pub trait GeoAngle {
     fn direction(&self) -> Direction;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(try_from = "f64")]
 pub struct Latitude(f64);
 
 pub const NEAREST_LATITUDE: Latitude = Latitude::nearest_latitude();
@@ -131,7 +135,8 @@ impl FromStr for Latitude {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(try_from = "f64")]
 pub struct Longitude(f64);
 
 impl Bounded<f64> for Longitude {
@@ -199,7 +204,8 @@ impl FromStr for Longitude {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(try_from = "f64")]
 pub struct Elevation(f64);
 
 impl Bounded<f64> for Elevation {
@@ -248,7 +254,7 @@ impl FromStr for Elevation {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Coordinates {
     pub latitude: Latitude,
     pub longitude: Longitude,

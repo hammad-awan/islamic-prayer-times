@@ -1,6 +1,7 @@
 pub mod params;
 
 pub use params::*;
+use serde::{Deserialize, Serialize};
 
 mod ext_lat;
 mod hours;
@@ -8,13 +9,10 @@ mod hours;
 use std::{
     collections::{BTreeMap, HashMap},
     fmt::Display,
-    mem::swap,
     ops::RangeInclusive,
 };
 
-use chrono::{NaiveDate, NaiveTime};
-
-use strum::EnumIter;
+use chrono::{Local, NaiveDate, NaiveTime};
 
 use crate::{
     error::OutOfRangeError,
@@ -29,8 +27,8 @@ use crate::{
 
 use self::{ext_lat::PrayerHour, hours::hour_to_time};
 
-/// An enumeration of Islamic prayer and other related times.
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, EnumIter)]
+/// An enumeration of Islamic prayer and related times.
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum Prayer {
     /// Some minutes before Fajr
     Imsaak,
@@ -55,69 +53,43 @@ impl Display for Prayer {
 }
 
 /// A simple date range.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct DateRange {
-    start_date: NaiveDate,
-    end_date: NaiveDate,
-}
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DateRange(RangeInclusive<NaiveDate>);
 
 impl DateRange {
-    /// Creates a new `DateRange` with the specified start and end date.
-    /// If the specified start date is after the end date, the start date
-    /// is used as the end date and vice versa.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use chrono::NaiveDate;
-    /// use islamic_prayer_times::DateRange;
-    ///
-    /// let mut start_date = NaiveDate::from_ymd_opt(2023, 1, 1).unwrap();
-    /// let mut end_date = NaiveDate::from_ymd_opt(2023, 1, 31).unwrap();
-    /// let mut date_range = DateRange::new(start_date, end_date);
-    ///
-    /// assert_eq!(date_range.start_date(), start_date);
-    /// assert_eq!(date_range.end_date(), end_date);
-    ///
-    /// let temp_date = start_date;
-    /// start_date = end_date;
-    /// end_date = temp_date;
-    ///
-    /// date_range = DateRange::new(start_date, end_date);
-    ///
-    /// assert_eq!(date_range.start_date(), end_date);
-    /// assert_eq!(date_range.end_date(), start_date);
-    /// ```
-    pub fn new(mut start_date: NaiveDate, mut end_date: NaiveDate) -> Self {
-        if start_date > end_date {
-            swap(&mut start_date, &mut end_date);
-        }
-
-        Self {
-            start_date,
-            end_date,
-        }
-    }
-
     /// Returns the start date of the `DateRange`.
-    pub fn start_date(&self) -> NaiveDate {
-        self.start_date
+    pub fn start_date(&self) -> &NaiveDate {
+        self.0.start()
     }
 
     /// Returns the end date of the `DateRange`.
-    pub fn end_date(&self) -> NaiveDate {
-        self.end_date
+    pub fn end_date(&self) -> &NaiveDate {
+        self.0.end()
+    }
+}
+
+impl From<RangeInclusive<NaiveDate>> for DateRange {
+    fn from(value: RangeInclusive<NaiveDate>) -> Self {
+        Self(value)
     }
 }
 
 impl Display for DateRange {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} - {}", self.start_date, self.end_date)
+        write!(f, "{} - {}", self.0.start(), self.0.end())
+    }
+}
+
+impl Default for DateRange {
+    /// Creates a new `DateRange` with today as the start and end dates.
+    fn default() -> Self {
+        let today = Local::now().date_naive();
+        Self(today..=today)
     }
 }
 
 /// A location specified by geographical [`Coordinates`](super::geo::coordinates::Coordinates) and [`Gmt`](super::geo::coordinates::Gmt) time.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Location {
     /// Geographical coordinates of the location.
     pub coords: Coordinates,
@@ -126,7 +98,7 @@ pub struct Location {
 }
 
 /// An atmospheric pressure in millibars.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Pressure(f64);
 
 impl Bounded<f64> for Pressure {
@@ -154,7 +126,7 @@ impl TryFrom<f64> for Pressure {
 }
 
 /// An outside temperature in degrees Celcius.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Temperature(f64);
 
 impl Bounded<f64> for Temperature {
@@ -182,7 +154,7 @@ impl TryFrom<f64> for Temperature {
 }
 
 /// Current weather as specified by [`Pressure`] and [`Temperature`].
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Weather {
     /// Atmospheric pressure
     pub pressure: Pressure,
@@ -203,7 +175,7 @@ impl Default for Weather {
 ///
 /// See [`params` module level documentation](params) for more information on extreme latitude
 /// calculation.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PrayerTime {
     /// The daily prayer time.
     pub time: NaiveTime,
@@ -222,7 +194,7 @@ impl Display for PrayerTime {
     }
 }
 
-/// Returns a [`B-tree`] of [`NaiveDate`](chrono::NaiveDate) keys to a [`map`] of [`Prayer`] keys to [`PrayerTime`] values
+/// Returns a [`B-tree`] of [`NaiveDate`](chrono::NaiveDate) keys to a [`B-tree`] of [`Prayer`] keys to [`PrayerTime`] values
 /// using the specified [`Params`](params::Params) for a [`Location`] and [`DateRange`].
 ///
 /// [`B-tree`]: std::collections::BTreeMap
@@ -242,9 +214,9 @@ impl Display for PrayerTime {
 /// let location = Location { coords, gmt };
 /// let start_date = NaiveDate::from_ymd_opt(2023, 1, 1).unwrap();
 /// let end_date = NaiveDate::from_ymd_opt(2023, 1, 31).unwrap();
-/// let date_range = DateRange::new(start_date, end_date);
+/// let date_range = DateRange::from(start_date..=end_date);
 ///
-/// let prayer_times_rng = prayer_times_dt_rng(&params, location, date_range);
+/// let prayer_times_rng = prayer_times_dt_rng(&params, location, &date_range);
 /// let prayer_times_date = prayer_times_rng.get(&start_date).unwrap();
 ///
 /// assert_eq!(31, prayer_times_rng.len());
@@ -253,12 +225,12 @@ impl Display for PrayerTime {
 pub fn prayer_times_dt_rng(
     params: &Params,
     location: Location,
-    date_range: DateRange,
-) -> BTreeMap<NaiveDate, HashMap<Prayer, Result<PrayerTime, ()>>> {
-    let dur = date_range.end_date - date_range.start_date;
+    date_range: &DateRange,
+) -> BTreeMap<NaiveDate, BTreeMap<Prayer, Result<PrayerTime, ()>>> {
+    let dur = *date_range.end_date() - *date_range.start_date();
     let days = (dur.num_days() + 1) as usize;
     let mut times = BTreeMap::new();
-    for date in date_range.start_date.iter_days().take(days) {
+    for date in date_range.start_date().iter_days().take(days) {
         let prayer_time = prayer_times_dt(params, location, date, None);
         times.insert(date, prayer_time);
     }
@@ -266,7 +238,7 @@ pub fn prayer_times_dt_rng(
     times
 }
 
-/// Returns a [`map`](std::collections::HashMap) of [`Prayer`] keys to [`PrayerTime`] values using the specified
+/// Returns a [`B-tree`](std::collections::BTreeMap) of [`Prayer`] keys to [`PrayerTime`] values using the specified
 /// [`Params`](params::Params) for a [`Location`], [`date`](chrono::NaiveDate), and its (optional) current [`Weather`].
 ///
 /// # Examples
@@ -293,7 +265,7 @@ pub fn prayer_times_dt(
     location: Location,
     date: NaiveDate,
     weather: Option<Weather>,
-) -> HashMap<Prayer, Result<PrayerTime, ()>> {
+) -> BTreeMap<Prayer, Result<PrayerTime, ()>> {
     use Prayer::*;
 
     let weather = if let Some(weather) = weather {
@@ -305,7 +277,7 @@ pub fn prayer_times_dt(
     let julian_day = JulianDay::new(date, location.gmt);
     let top_astro_day = TopAstroDay::from_jd(julian_day, location.coords);
     let hours = get_hours_adj_ext(params, &top_astro_day, weather);
-    let mut times = HashMap::from_iter(
+    let mut times = BTreeMap::from_iter(
         hours
             .iter()
             .map(|x| (*x.0, x.1.map(|y| to_prayer_time(params, *x.0, y)))),

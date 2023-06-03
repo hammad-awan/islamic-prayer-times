@@ -103,13 +103,14 @@
 use std::collections::HashMap;
 
 use clap::ValueEnum;
+use serde::{Deserialize, Serialize};
 
 use crate::geo::coordinates::Latitude;
 
 use super::Prayer;
 
 /// The `Method` type. See [the module level documentation](self) for more.
-#[derive(Debug, Clone, Copy, PartialEq, ValueEnum)]
+#[derive(Debug, Clone, Copy, PartialEq, ValueEnum, Serialize, Deserialize)]
 pub enum Method {
     /// None
     None,
@@ -148,7 +149,7 @@ pub enum Method {
 }
 
 /// The `ExtremeLatitudeMethod` type. See [the module level documentation](self) for more.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum ExtremeLatitudeMethod {
     /// No adjustment. Prayer times can be invalid.
     None,
@@ -186,7 +187,7 @@ pub enum ExtremeLatitudeMethod {
 }
 
 /// The `RoundSeconds` type. See [the module level documentation](self) for more.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RoundSeconds {
     /// No rounding
     None,
@@ -202,7 +203,7 @@ pub enum RoundSeconds {
 }
 
 /// The `AsrShadowRatio` type. See [the module level documentation](self) for more.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AsrShadowRatio {
     /// Shafi school for calculating Asr prayer time.
     Shafi = 1,
@@ -211,7 +212,7 @@ pub enum AsrShadowRatio {
 }
 
 /// The `Params` type. See [the module level documentation](self) for more.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Params {
     pub round_seconds: RoundSeconds,
     pub asr_shadow_ratio: AsrShadowRatio,
