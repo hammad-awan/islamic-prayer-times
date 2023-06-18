@@ -81,7 +81,7 @@ impl Display for DateRange {
 }
 
 impl Default for DateRange {
-    /// Creates a new `DateRange` with today as the start and end dates.
+    /// Returns the "default value" for the type with today as its start and end dates. [Read more](Default::default)
     fn default() -> Self {
         let today = Local::now().date_naive();
         Self(today..=today)
@@ -200,17 +200,17 @@ impl Display for PrayerTime {
 /// [`B-tree`]: std::collections::BTreeMap
 ///
 /// # Examples
-///
 /// ```
+/// # use std::error::Error;
 /// use chrono::NaiveDate;
 /// use islamic_prayer_times::*;
 ///
 /// let params = Params::default();
-/// let latitude = Latitude::try_from(39.).unwrap();
-/// let longitude = Longitude::try_from(-77.).unwrap();
-/// let elevation = Elevation::try_from(0.).unwrap();
+/// let latitude = Latitude::try_from(39.)?;
+/// let longitude = Longitude::try_from(-77.)?;
+/// let elevation = Elevation::try_from(0.)?;
 /// let coords = Coordinates::new(latitude, longitude, elevation);
-/// let gmt = Gmt::try_from(-5.).unwrap();
+/// let gmt = Gmt::try_from(-5.)?;
 /// let location = Location { coords, gmt };
 /// let start_date = NaiveDate::from_ymd_opt(2023, 1, 1).unwrap();
 /// let end_date = NaiveDate::from_ymd_opt(2023, 1, 31).unwrap();
@@ -221,6 +221,7 @@ impl Display for PrayerTime {
 ///
 /// assert_eq!(31, prayer_times_rng.len());
 /// assert_eq!(7, prayer_times_date.len());
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub fn prayer_times_dt_rng(
     params: &Params,
@@ -239,26 +240,28 @@ pub fn prayer_times_dt_rng(
 }
 
 /// Returns a [`B-tree`](std::collections::BTreeMap) of [`Prayer`] keys to [`PrayerTime`] values using the specified
-/// [`Params`](params::Params) for a [`Location`], [`date`](chrono::NaiveDate), and its (optional) current [`Weather`].
+/// [`Params`](params::Params) for a [`Location`], [`NaiveDate`](chrono::NaiveDate), and its (optional) current [`Weather`].
 ///
 /// # Examples
 ///
 /// ```
+/// # use std::error::Error;
 /// use chrono::NaiveDate;
 /// use islamic_prayer_times::*;
 ///
 /// let params = Params::default();
-/// let latitude = Latitude::try_from(39.).unwrap();
-/// let longitude = Longitude::try_from(-77.).unwrap();
-/// let elevation = Elevation::try_from(0.).unwrap();
+/// let latitude = Latitude::try_from(39.)?;
+/// let longitude = Longitude::try_from(-77.)?;
+/// let elevation = Elevation::try_from(0.)?;
 /// let coords = Coordinates::new(latitude, longitude, elevation);
-/// let gmt = Gmt::try_from(-5.).unwrap();
+/// let gmt = Gmt::try_from(-5.)?;
 /// let location = Location { coords, gmt };
 /// let date = NaiveDate::from_ymd_opt(2023, 2, 6).unwrap();
 ///
 /// let prayer_times = prayer_times_dt(&params, location, date, None);
 ///
 /// assert_eq!(7, prayer_times.len());
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub fn prayer_times_dt(
     params: &Params,

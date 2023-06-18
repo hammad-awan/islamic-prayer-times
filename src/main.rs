@@ -11,36 +11,49 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Parser)]
 #[command(author, version, about, long_about = None)]
 struct CliArgs {
+    /// Latitude of the geographical location (required unless the --input_file or -i cli parameter is specified)
     #[arg(short = 'l', long, value_parser = clap::value_parser!(Latitude), required_unless_present = "input_file")]
     latitude: Option<Latitude>,
 
+    /// Longitude of the geographical location (required unless the --input_file or -i cli parameter is specified)
     #[arg(short = 't', long, value_parser = clap::value_parser!(Longitude), required_unless_present = "input_file")]
     longitude: Option<Longitude>,
 
+    /// Elevation of the geographical location (default value = 0m)
     #[arg(short, long, value_parser = clap::value_parser!(Elevation), default_value = "0")]
     elevation: Elevation,
 
+    /// Greenwich Mean Time (GMT) of the geographical location (required unless the --input_file or -i cli parameter is specified)
     #[arg(short, long, value_parser = clap::value_parser!(Gmt), required_unless_present = "input_file")]
     gmt: Option<Gmt>,
 
+    /// Calculation method
     #[arg(short, long, value_enum, default_value_t = Method::Isna)]
     method: Method,
 
+    /// Start date
     #[arg(short, long, value_parser = clap::value_parser!(NaiveDate))]
     start_date: Option<NaiveDate>,
 
+    /// End date
     #[arg(short = 'n', long, value_parser = clap::value_parser!(NaiveDate))]
     end_date: Option<NaiveDate>,
 
+    /// The path to the JSON parameters file
     #[arg(short, long)]
     input_file: Option<String>,
 
+    /// The path to the JSON output file
     #[arg(short, long)]
     output_file: Option<String>,
+
+    /// The path to the JSON output file that captures the cli parameters when the --input_file or -i cli parameter is not specified.
+    #[arg(short, long)]
+    params_file: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct JsonParams {
+struct ParamsConfig {
     params: Params,
     location: Location,
     date_range: DateRange,
@@ -54,13 +67,16 @@ fn main() {
     let date_range: DateRange;
 
     if let Some(input_file) = cli_args.input_file {
-        let file_data = fs::read_to_string(input_file).expect("Could not read the input file!");
-        let json_params: JsonParams = serde_json::from_str(&file_data)
-            .expect("Could not deserialize JSON data from the input file!");
+        let file_data = fs::read_to_string(&input_file)
+            .expect(&format!("Could not read input file {}", &input_file));
+        let params_config: ParamsConfig = serde_json::from_str(&file_data).expect(&format!(
+            "Could not deserialize JSON data from input file {}",
+            &input_file
+        ));
 
-        params = json_params.params;
-        location = json_params.location;
-        date_range = json_params.date_range;
+        params = params_config.params;
+        location = params_config.location;
+        date_range = params_config.date_range;
     } else {
         params = Params::new(cli_args.method);
         let coords = Coordinates::new(
@@ -91,24 +107,35 @@ fn main() {
 
         date_range = DateRange::from(start_date..=end_date);
 
-        let file = File::create("JsonParams.json").expect("Could not create JsonParams.json!");
-        serde_json::to_writer(
-            file,
-            &JsonParams {
-                params: params.clone(),
-                location,
-                date_range: date_range.clone(),
-            },
-        )
-        .expect("Could not serialize JSON data to JsonParams.json!");
+        if let Some(params_file) = cli_args.params_file {
+            let file = File::create(&params_file).expect(&format!(
+                "Could not create params config file {}",
+                &params_file
+            ));
+            serde_json::to_writer(
+                file,
+                &ParamsConfig {
+                    params: params.clone(),
+                    location,
+                    date_range: date_range.clone(),
+                },
+            )
+            .expect(&format!(
+                "Could not serialize JSON data to params config file {}",
+                &params_file,
+            ));
+        }
     }
 
     let pts_by_date = prayer_times_dt_rng(&params, location, &date_range);
 
     if let Some(output_file) = cli_args.output_file {
-        let file = File::create(output_file).expect("Could not create the output file!");
-        serde_json::to_writer(file, &pts_by_date)
-            .expect("Could not serialize JSON data to the output file!");
+        let file = File::create(&output_file)
+            .expect(&format!("Could not create output file {}", &output_file));
+        serde_json::to_writer(file, &pts_by_date).expect(&format!(
+            "Could not serialize JSON data to output file {}",
+            &output_file
+        ));
     } else {
         for pts_for_date in pts_by_date {
             let hijri_date = HijriDate::from(pts_for_date.0);
