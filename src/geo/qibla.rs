@@ -1,6 +1,6 @@
 //! The [`Qibla`] (Arabic: قِبْلَة, romanized: qiblah, lit. 'direction') is the direction towards
 //! the Kaaba in the Sacred Mosque in Mecca, which is used by Muslims in various religious
-//!  contexts, particularly the direction of prayer.
+//! contexts, particularly the direction of prayer.
 
 use std::fmt::Display;
 

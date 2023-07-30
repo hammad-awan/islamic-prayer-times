@@ -4,10 +4,15 @@ pub const TWO_PI_DEG: f64 = 360.;
 pub const PI_DEG: f64 = 180.;
 pub const RIGHT_ANG_DEG: f64 = 90.;
 
+// A trait to implement on a numerical type that truncates its value to
+// its whole number value, e.g., 1.7 is "floored" to 1.
 pub trait CanFloor {
     fn floor(self) -> Self;
 }
 
+// A trait to implement on a numerical type that represents a mathematical
+// angle which provides a number of methods with default implementations
+// to cap/limit it.
 pub trait LimitAngle
 where
     Self: Sized
@@ -20,7 +25,7 @@ where
         + From<f64>
         + Copy,
 {
-    // Caps an angle between 0 and cap degrees.
+    // Cap the angle within "cap" degrees and return the result.
     fn cap_angle(self, cap: Self) -> Self {
         let val = self / cap;
         let val = val - val.floor();
@@ -33,17 +38,17 @@ where
         }
     }
 
-    /// Caps angle between 0 and 360 degrees.
+    // Cap the angle within 360 degrees and return the result.
     fn cap_angle_360(self) -> Self {
         self.cap_angle(Self::from(TWO_PI_DEG))
     }
 
-    /// Caps an angle between 0 and 180 degrees.
+    // Cap the angle within 180 degrees and return the result.
     fn cap_angle_180(self) -> Self {
         self.cap_angle(Self::from(PI_DEG))
     }
 
-    // Caps an angle between 0 and cap degrees.
+    // Caps an angle within 1 and return the result.
     fn cap_angle_1(self) -> Self {
         let val = self - self.floor();
         if val < Self::from(0.) {
@@ -53,7 +58,7 @@ where
         }
     }
 
-    // Caps an angle between -180 and 180 degrees.
+    // Caps an angle between 180 and -180 degrees and return the result.
     fn cap_angle_between_180(self) -> Self {
         let val = self / Self::from(TWO_PI_DEG);
         let val = (val - val.floor()) * Self::from(TWO_PI_DEG);

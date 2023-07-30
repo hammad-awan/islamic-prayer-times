@@ -2,8 +2,9 @@ use std::fmt::Display;
 
 use chrono::{Datelike, NaiveDate};
 
-use crate::error::ConversionError;
+use crate::error::OutOfRangeError;
 
+/// Hijri day of the week.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HijriDay {
     Ahad = 1,
@@ -22,7 +23,7 @@ impl Display for HijriDay {
 }
 
 impl TryFrom<u8> for HijriDay {
-    type Error = ConversionError;
+    type Error = OutOfRangeError<u8>;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         use HijriDay::*;
@@ -35,11 +36,12 @@ impl TryFrom<u8> for HijriDay {
             5 => Ok(Khamees),
             6 => Ok(Jumaa),
             7 => Ok(Sabt),
-            _ => Err(ConversionError),
+            _ => Err(OutOfRangeError(1..=7)),
         }
     }
 }
 
+/// Hijri month of the year.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HijriMonth {
     Muharram = 1,
@@ -57,7 +59,7 @@ pub enum HijriMonth {
 }
 
 impl TryFrom<u8> for HijriMonth {
-    type Error = ConversionError;
+    type Error = OutOfRangeError<u8>;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         use HijriMonth::*;
@@ -75,7 +77,7 @@ impl TryFrom<u8> for HijriMonth {
             10 => Ok(Shawwal),
             11 => Ok(DhulQiddah),
             12 => Ok(DhulHijjah),
-            _ => Err(ConversionError),
+            _ => Err(OutOfRangeError(1..=12)),
         }
     }
 }
@@ -99,6 +101,7 @@ impl Display for HijriMonth {
     }
 }
 
+/// A date in the Hijri calender.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct HijriDate {
     date: NaiveDate,
@@ -112,26 +115,32 @@ pub struct HijriDate {
 impl HijriDate {
     const HIJRI_EPOCH: i32 = 227015;
 
+    /// Returns the ISO 8601 calendar date without timezone.
     pub fn date(&self) -> NaiveDate {
         self.date
     }
 
+    /// Returns the Hijri day of the month.
     pub fn day(&self) -> u8 {
         self.day
     }
 
+    /// Returns the Hijri day of the week.
     pub fn day_of_week(&self) -> HijriDay {
         HijriDay::try_from(self.weekday).unwrap()
     }
 
+    /// Hijri month of the year.
     pub fn month(&self) -> HijriMonth {
         HijriMonth::try_from(self.month).unwrap()
     }
 
+    /// Returns the Hijri year.
     pub fn year(&self) -> u32 {
         self.year
     }
 
+    /// Returns true when the Hijri date is before Hijra, false otherwise.
     pub fn pre_epoch(&self) -> bool {
         self.pre_epoch
     }

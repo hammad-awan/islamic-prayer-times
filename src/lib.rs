@@ -14,6 +14,9 @@ pub use prayer_times::*;
 
 mod angle;
 
+// A trait to implement on a type that is bounded within an inclusive range
+// which provides a default implementation for try_from so it can be constructed
+// using TryFrom<T>::try_from syntax from a type T.
 trait Bounded<T>: Sized
 where
     T: Debug + Display + PartialOrd,
@@ -31,6 +34,8 @@ where
     fn new(value: T) -> Self;
 }
 
+// A trait to implement on a type which provides a default implentation for
+// parse so that it can be constructed by parsing a string from a type T.
 trait Parsable<T>
 where
     T: FromStr,
@@ -40,15 +45,15 @@ where
 {
     fn parse(s: &str) -> std::result::Result<Self, ParseError> {
         let value = s.parse::<T>();
-        if value.is_err() {
-            Err(ParseError(value.err().unwrap().to_string()))
-        } else {
-            let t = Self::try_from(value.unwrap());
-            if t.is_err() {
-                Err(ParseError(t.err().unwrap().to_string()))
+        if let Ok(value) = value {
+            let t = Self::try_from(value);
+            if let Ok(t) = t {
+                Ok(t)
             } else {
-                Ok(t.unwrap())
+                Err(ParseError(t.err().unwrap().to_string()))
             }
+        } else {
+            Err(ParseError(value.err().unwrap().to_string()))
         }
     }
 }
