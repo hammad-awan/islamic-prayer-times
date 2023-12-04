@@ -4,7 +4,7 @@ use chrono::Local;
 use clap::Parser;
 use cli::{CliArgs, ParamsConfig};
 use islamic_prayer_times::{
-    prayer_times_dt_rng, Coordinates, DateRange, HijriDate, Location, Params,
+    prayer_times_dt_rng_block, Coordinates, DateRange, HijriDate, Location, Params,
 };
 
 mod cli;
@@ -82,7 +82,7 @@ fn main() {
         }
     }
 
-    let pts_by_date = prayer_times_dt_rng(&params, location, &date_range);
+    let pts_by_date = prayer_times_dt_rng_block(&params, location, &date_range, 40);
 
     if let Some(output_file) = cli_args.output_file {
         // Write prayer times as JSON file.

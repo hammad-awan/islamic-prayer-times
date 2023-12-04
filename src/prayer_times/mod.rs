@@ -9,10 +9,12 @@ mod hours;
 use std::{
     collections::{BTreeMap, HashMap},
     fmt::Display,
-    ops::RangeInclusive,
+    ops::{Add, RangeInclusive},
+    sync::mpsc::channel,
+    thread::{self},
 };
 
-use chrono::{Local, NaiveDate, NaiveTime};
+use chrono::{Duration, Local, NaiveDate, NaiveTime};
 
 use crate::{
     error::OutOfRangeError,
@@ -65,6 +67,33 @@ impl DateRange {
     /// Returns the end date of the `DateRange`.
     pub fn end_date(&self) -> &NaiveDate {
         self.0.end()
+    }
+
+    // Returns the number of days in the `DateRange`.
+    pub fn num_days(&self) -> usize {
+        let duration = *self.end_date() - *self.start_date();
+        (duration.num_days() + 1) as usize
+    }
+
+    // Partitions the date range into `Vec` of `count` date ranges.
+    pub fn partition(&self, count: usize) -> Vec<DateRange> {
+        if count == 1 {
+            vec![self.clone()]
+        } else {
+            let days = self.num_days();
+            let block_size = (days as f64 / count as f64).ceil() as i64;
+            let mut date_ranges = Vec::with_capacity(if days < count { days } else { count });
+            let mut start_date_iter = *self.start_date();
+            while start_date_iter <= *self.end_date() {
+                let mut end_date = start_date_iter.add(Duration::days(block_size - 1));
+                if end_date > *self.end_date() {
+                    end_date = *self.end_date();
+                }
+                date_ranges.push(DateRange(start_date_iter..=end_date));
+                start_date_iter = start_date_iter.add(Duration::days(block_size));
+            }
+            date_ranges
+        }
     }
 }
 
@@ -228,15 +257,65 @@ pub fn prayer_times_dt_rng(
     location: Location,
     date_range: &DateRange,
 ) -> BTreeMap<NaiveDate, BTreeMap<Prayer, Result<PrayerTime, ()>>> {
-    let dur = *date_range.end_date() - *date_range.start_date();
-    let days = (dur.num_days() + 1) as usize;
     let mut times = BTreeMap::new();
-    for date in date_range.start_date().iter_days().take(days) {
+    for date in date_range
+        .start_date()
+        .iter_days()
+        .take(date_range.num_days())
+    {
         let prayer_time = prayer_times_dt(params, location, date, None);
         times.insert(date, prayer_time);
     }
-
     times
+}
+
+pub fn prayer_times_dt_rng_block(
+    params: &Params,
+    location: Location,
+    date_range: &DateRange,
+    min_days_for_pll: usize,
+) -> BTreeMap<NaiveDate, BTreeMap<Prayer, Result<PrayerTime, ()>>> {
+    // Determine parallelism.
+    let avail_pll = if let Ok(count) = thread::available_parallelism() {
+        count.get()
+    } else {
+        1
+    };
+    let no_parallelism = date_range.num_days() / avail_pll < min_days_for_pll;
+
+    // No parallelism.
+    if avail_pll == 1 || no_parallelism {
+        prayer_times_dt_rng(params, location, date_range)
+    } else {
+        // Maximize parallelism through threads that calculate partial time results.
+        thread::scope(|s| {
+            let (tx, rx) = channel();
+
+            // Spawn thread to combine prayer times for each date range.
+            let handle = s.spawn(move || {
+                let mut times = BTreeMap::new();
+                while let Ok(mut partial_times) = rx.recv() {
+                    times.append(&mut partial_times);
+                }
+                times
+            });
+
+            // Spawn threads to calculate prayer times for each date range.
+            let date_ranges = date_range.partition(avail_pll);
+            for date_range in date_ranges {
+                let tx = tx.clone();
+                s.spawn(move || {
+                    let partial_times = prayer_times_dt_rng(params, location, &date_range);
+                    tx.send(partial_times).unwrap();
+                });
+            }
+
+            // Close channel to terminate blocking channel receive loop.
+            drop(tx);
+
+            handle.join().unwrap()
+        })
+    }
 }
 
 /// Returns a [`B-tree`](std::collections::BTreeMap) of [`Prayer`] keys to [`PrayerTime`] values using the specified
