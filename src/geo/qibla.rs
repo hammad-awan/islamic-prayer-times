@@ -6,7 +6,7 @@ use std::fmt::Display;
 
 use super::coordinates::Coordinates;
 
-/// `Qibla` for geographical [`Coordinates`](super::coordinates::Coordinates).
+/// `Qibla` for geographical [`Coordinates`].
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Qibla {
     coords: Coordinates,
@@ -36,7 +36,7 @@ impl Qibla {
     const KAABA_LATITUDE: f64 = 21.423333;
     const KAABA_LONGITUDE: f64 = 39.823333;
 
-    /// Constructs a new `Qibla` from geographical [`Coordinates`](super::coordinates::Coordinates).
+    /// Constructs a new `Qibla` from geographical [`Coordinates`].
     pub fn new(coords: Coordinates) -> Self {
         let lat_rads = f64::from(coords.latitude).to_radians();
         let x = f64::from(coords.longitude).to_radians() - Self::KAABA_LONGITUDE.to_radians();
@@ -45,7 +45,7 @@ impl Qibla {
         Self { coords, degrees }
     }
 
-    /// Returns the `Qibla` geographical [`Coordinates`](super::coordinates::Coordinates) passed to [`Qibla::new`].
+    /// Returns the `Qibla` geographical [`Coordinates`] passed to [`Qibla::new`].
     pub fn coords(&self) -> Coordinates {
         self.coords
     }

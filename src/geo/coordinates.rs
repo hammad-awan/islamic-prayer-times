@@ -1,3 +1,6 @@
+//! Geographical location types.
+//!
+
 use std::{fmt::Display, ops::RangeInclusive, str::FromStr};
 
 use serde::{Deserialize, Serialize};
@@ -279,4 +282,13 @@ impl Display for Coordinates {
             self.latitude, self.longitude, self.elevation
         )
     }
+}
+
+/// A location specified by geographical [`Coordinates`] and [`Gmt`] time.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct Location {
+    /// Geographical coordinates of the location.
+    pub coords: Coordinates,
+    /// Greenwich Mean Time of the location.
+    pub gmt: Gmt,
 }

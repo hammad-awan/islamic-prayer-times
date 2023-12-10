@@ -6,9 +6,10 @@ use crate::{
     angle::{LimitAngle, TWO_PI_DEG},
     geo::astro::TopAstroDay,
     prayer_times::params::{Params, RoundSeconds},
+    Weather,
 };
 
-use super::{Prayer, Weather};
+use super::Prayer;
 
 pub const MIN_SEC_PER_HR_MIN: f64 = 60.;
 pub const HRS_PER_DAY: f64 = 24.;

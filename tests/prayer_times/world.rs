@@ -3,8 +3,9 @@ use islamic_prayer_times::{
     geo::coordinates::{Coordinates, Elevation, Gmt, Latitude, Longitude},
     prayer_times::{
         params::{Method, Params},
-        prayer_times_dt, Location, Prayer,
+        prayer_times_dt, Prayer,
     },
+    Location,
 };
 
 #[test]

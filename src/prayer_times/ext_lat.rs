@@ -8,10 +8,10 @@ use crate::{
         hours::{get_hours, HRS_PER_DAY, MIN_SEC_PER_HR_MIN},
         params::ExtremeLatitudeMethod,
     },
-    Latitude,
+    Latitude, Weather,
 };
 
-use super::{params::Params, Prayer, Weather};
+use super::{params::Params, Prayer};
 
 #[derive(Debug, Clone, Copy)]
 pub struct PrayerHour {

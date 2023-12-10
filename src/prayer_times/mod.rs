@@ -1,6 +1,9 @@
+pub mod date;
 pub mod params;
 
+pub use date::*;
 pub use params::*;
+
 use serde::{Deserialize, Serialize};
 
 mod ext_lat;
@@ -9,22 +12,16 @@ mod hours;
 use std::{
     collections::{BTreeMap, HashMap},
     fmt::Display,
-    ops::{Add, RangeInclusive},
     sync::mpsc::channel,
     thread::{self},
 };
 
-use chrono::{Duration, Local, NaiveDate, NaiveTime};
+use chrono::{NaiveDate, NaiveTime};
 
 use crate::{
-    error::OutOfRangeError,
-    geo::{
-        astro::TopAstroDay,
-        coordinates::{Coordinates, Gmt},
-        julian_day::JulianDay,
-    },
+    geo::{astro::TopAstroDay, coordinates::Location, julian_day::JulianDay},
     prayer_times::{ext_lat::adj_for_ext_lat, hours::get_hours},
-    Bounded,
+    Weather,
 };
 
 use self::{ext_lat::PrayerHour, hours::hour_to_time};
@@ -54,152 +51,6 @@ impl Display for Prayer {
     }
 }
 
-/// A simple date range.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct DateRange(RangeInclusive<NaiveDate>);
-
-impl DateRange {
-    /// Returns the start date of the `DateRange`.
-    pub fn start_date(&self) -> &NaiveDate {
-        self.0.start()
-    }
-
-    /// Returns the end date of the `DateRange`.
-    pub fn end_date(&self) -> &NaiveDate {
-        self.0.end()
-    }
-
-    // Returns the number of days in the `DateRange`.
-    pub fn num_days(&self) -> usize {
-        let duration = *self.end_date() - *self.start_date();
-        (duration.num_days() + 1) as usize
-    }
-
-    // Partitions the date range into `Vec` of `count` date ranges.
-    pub fn partition(&self, count: usize) -> Vec<DateRange> {
-        if count == 1 {
-            vec![self.clone()]
-        } else {
-            let days = self.num_days();
-            let block_size = (days as f64 / count as f64).ceil() as i64;
-            let mut date_ranges = Vec::with_capacity(if days < count { days } else { count });
-            let mut start_date_iter = *self.start_date();
-            while start_date_iter <= *self.end_date() {
-                let mut end_date = start_date_iter.add(Duration::days(block_size - 1));
-                if end_date > *self.end_date() {
-                    end_date = *self.end_date();
-                }
-                date_ranges.push(DateRange(start_date_iter..=end_date));
-                start_date_iter = start_date_iter.add(Duration::days(block_size));
-            }
-            date_ranges
-        }
-    }
-}
-
-impl From<RangeInclusive<NaiveDate>> for DateRange {
-    fn from(value: RangeInclusive<NaiveDate>) -> Self {
-        Self(value)
-    }
-}
-
-impl Display for DateRange {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} - {}", self.0.start(), self.0.end())
-    }
-}
-
-impl Default for DateRange {
-    /// Returns the "default value" for the type with today as its start and end dates. [Read more](Default::default)
-    fn default() -> Self {
-        let today = Local::now().date_naive();
-        Self(today..=today)
-    }
-}
-
-/// A location specified by geographical [`Coordinates`](super::geo::coordinates::Coordinates) and [`Gmt`](super::geo::coordinates::Gmt) time.
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
-pub struct Location {
-    /// Geographical coordinates of the location.
-    pub coords: Coordinates,
-    /// Greenwich Mean Time of the location.
-    pub gmt: Gmt,
-}
-
-/// An atmospheric pressure in millibars.
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
-pub struct Pressure(f64);
-
-impl Bounded<f64> for Pressure {
-    fn range() -> RangeInclusive<f64> {
-        100. ..=1050.
-    }
-
-    fn new(value: f64) -> Self {
-        Self(value)
-    }
-}
-
-impl From<Pressure> for f64 {
-    fn from(value: Pressure) -> Self {
-        value.0
-    }
-}
-
-impl TryFrom<f64> for Pressure {
-    type Error = OutOfRangeError<f64>;
-
-    fn try_from(value: f64) -> Result<Self, Self::Error> {
-        <Self as Bounded<f64>>::try_from(value)
-    }
-}
-
-/// An outside temperature in degrees Celcius.
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
-pub struct Temperature(f64);
-
-impl Bounded<f64> for Temperature {
-    fn range() -> RangeInclusive<f64> {
-        -90. ..=57.
-    }
-
-    fn new(value: f64) -> Self {
-        Self(value)
-    }
-}
-
-impl From<Temperature> for f64 {
-    fn from(value: Temperature) -> Self {
-        value.0
-    }
-}
-
-impl TryFrom<f64> for Temperature {
-    type Error = OutOfRangeError<f64>;
-
-    fn try_from(value: f64) -> Result<Self, Self::Error> {
-        <Self as Bounded<f64>>::try_from(value)
-    }
-}
-
-/// Current weather as specified by [`Pressure`] and [`Temperature`].
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
-pub struct Weather {
-    /// Atmospheric pressure
-    pub pressure: Pressure,
-    /// Outside temperature
-    pub temperature: Temperature,
-}
-
-impl Default for Weather {
-    fn default() -> Self {
-        Self {
-            pressure: <Pressure as TryFrom<f64>>::try_from(1010.).unwrap(),
-            temperature: <Temperature as TryFrom<f64>>::try_from(14.).unwrap(),
-        }
-    }
-}
-
 /// A calculated Islamic [`Prayer`] time that is possibly considered extreme.
 ///
 /// See [`params` module level documentation](params) for more information on extreme latitude
@@ -223,8 +74,8 @@ impl Display for PrayerTime {
     }
 }
 
-/// Returns a [`B-tree`] of [`NaiveDate`](chrono::NaiveDate) keys to a [`B-tree`] of [`Prayer`] keys to [`PrayerTime`] values
-/// using the specified [`Params`](params::Params) for a [`Location`] and [`DateRange`].
+/// Returns a [`B-tree`] of [`NaiveDate`] keys to a [`B-tree`] of [`Prayer`] keys to [`PrayerTime`] values
+/// using the specified [`Params`] for a [`Location`] and [`DateRange`].
 ///
 /// [`B-tree`]: std::collections::BTreeMap
 ///
@@ -269,6 +120,12 @@ pub fn prayer_times_dt_rng(
     times
 }
 
+/// Returns a [`B-tree`] of [`NaiveDate`] keys to a [`B-tree`] of [`Prayer`] keys to [`PrayerTime`] values
+/// using the specified [`Params`] for a [`Location`] and [`DateRange`] while maximizing parallelism for a
+/// (possibly) large number of calculations.
+///
+/// [`B-tree`]: std::collections::BTreeMap
+///
 pub fn prayer_times_dt_rng_block(
     params: &Params,
     location: Location,
@@ -319,7 +176,7 @@ pub fn prayer_times_dt_rng_block(
 }
 
 /// Returns a [`B-tree`](std::collections::BTreeMap) of [`Prayer`] keys to [`PrayerTime`] values using the specified
-/// [`Params`](params::Params) for a [`Location`], [`NaiveDate`](chrono::NaiveDate), and its (optional) current [`Weather`].
+/// [`Params`] for a [`Location`], [`NaiveDate`], and its (optional) current [`Weather`].
 ///
 /// # Examples
 ///
