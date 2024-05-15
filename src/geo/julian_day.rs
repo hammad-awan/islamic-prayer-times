@@ -64,12 +64,10 @@ impl From<JulianDay> for f64 {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::test_utils::EPSILON_TEST;
     use chrono::NaiveDate;
     use float_cmp::assert_approx_eq;
-
-    use super::*;
-
-    const EPSILON_TEST: f64 = 0.00000001;
 
     #[test]
     fn should_new() {

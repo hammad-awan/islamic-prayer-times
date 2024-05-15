@@ -13,6 +13,7 @@ use crate::{
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(try_from = "f64")]
+/// Greenwich Mean Time - the local mean time at the Royal Observatory in Greewich, London.
 pub struct Gmt(f64);
 
 impl Bounded<f64> for Gmt {
@@ -50,6 +51,7 @@ impl FromStr for Gmt {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+/// An enumeration respresenting the four Cardinal directions.
 pub enum Direction {
     North,
     South,
@@ -57,14 +59,20 @@ pub enum Direction {
     West,
 }
 
+/// A trait implemented on the [`Latitude`] and [`Longitude`] types
+/// to identify the Cardinal [`Direction`] of each.
 pub trait GeoAngle {
     fn direction(&self) -> Direction;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(try_from = "f64")]
+/// The angular distance in degrees of a geographical location
+/// North or South of the Equator.
 pub struct Latitude(f64);
 
+/// The nearest [`Latitude`] (48.5) to use in prayer times calculation
+/// for a geographical location that has its latitude greater than it.
 pub const NEAREST_LATITUDE: Latitude = Latitude::nearest_latitude();
 
 impl Latitude {
@@ -140,6 +148,8 @@ impl FromStr for Latitude {
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(try_from = "f64")]
+/// The angular distance in degress of a geographical location
+/// East or West of the Prime Meridian.
 pub struct Longitude(f64);
 
 impl Bounded<f64> for Longitude {
@@ -209,6 +219,7 @@ impl FromStr for Longitude {
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(try_from = "f64")]
+/// The height in meters above sea level on the Earth.
 pub struct Elevation(f64);
 
 impl Bounded<f64> for Elevation {
@@ -258,6 +269,8 @@ impl FromStr for Elevation {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+/// A tripartite structure of [`Latitude`], [`Longitude`], and [`Elevation`]
+/// that uniquely identifies a geographical location on the surface of the Earth.
 pub struct Coordinates {
     pub latitude: Latitude,
     pub longitude: Longitude,
@@ -284,7 +297,7 @@ impl Display for Coordinates {
     }
 }
 
-/// A location specified by geographical [`Coordinates`] and [`Gmt`] time.
+/// A geographical location identified by [`Coordinates`] and [`Gmt`] time.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Location {
     /// Geographical coordinates of the location.

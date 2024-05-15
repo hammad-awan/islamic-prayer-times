@@ -11,8 +11,7 @@ pub trait CanFloor {
 }
 
 // A trait to implement on a numerical type that represents a mathematical
-// angle which provides a number of methods with default implementations
-// to cap/limit it.
+// angle and has default implementations of methods to cap/limit it.
 pub trait LimitAngle
 where
     Self: Sized
@@ -25,7 +24,7 @@ where
         + From<f64>
         + Copy,
 {
-    // Cap the angle within "cap" degrees and return the result.
+    // Cap the angle within `cap` degrees and return a new angle consuming the self.
     fn cap_angle(self, cap: Self) -> Self {
         let val = self / cap;
         let val = val - val.floor();
@@ -38,17 +37,17 @@ where
         }
     }
 
-    // Cap the angle within 360 degrees and return the result.
+    // Cap the angle within 360 degrees and return a new angle consuming the self.
     fn cap_angle_360(self) -> Self {
         self.cap_angle(Self::from(TWO_PI_DEG))
     }
 
-    // Cap the angle within 180 degrees and return the result.
+    // Cap the angle within 180 degrees and return a new angle consuming the self.
     fn cap_angle_180(self) -> Self {
         self.cap_angle(Self::from(PI_DEG))
     }
 
-    // Caps an angle within 1 and return the result.
+    // Cap the angle between 0. ..=1. and return a new angle consuming the self.
     fn cap_angle_1(self) -> Self {
         let val = self - self.floor();
         if val < Self::from(0.) {
@@ -58,7 +57,7 @@ where
         }
     }
 
-    // Caps an angle between 180 and -180 degrees and return the result.
+    // Cap the angle between 180 and -180 degrees return a new angle consuming the self.
     fn cap_angle_between_180(self) -> Self {
         let val = self / Self::from(TWO_PI_DEG);
         let val = (val - val.floor()) * Self::from(TWO_PI_DEG);
@@ -83,9 +82,8 @@ impl LimitAngle for f64 {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_utils::EPSILON_TEST;
     use float_cmp::assert_approx_eq;
-
-    const EPSILON_TEST: f64 = 0.00000001;
 
     #[test]
     fn should_cap_fractional_positive_angle_at_360() {

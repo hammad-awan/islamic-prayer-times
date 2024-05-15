@@ -13,6 +13,7 @@ pub use hijri_date::*;
 pub use prayer_times::*;
 
 mod angle;
+mod test_utils;
 
 // A trait to implement on a type that is bounded within an inclusive range
 // which provides a default implementation for try_from so it can be constructed

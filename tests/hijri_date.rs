@@ -79,7 +79,7 @@ fn test_friday_july() {
     // Act
     let hijri_date = HijriDate::from(date);
     // Assert
-    assert_eq!("Jumaa, Dhul Qiddah 12, 1441 A.H.", hijri_date.to_string());
+    assert_eq!("Jumaah, Dhul Qiddah 12, 1441 A.H.", hijri_date.to_string());
 }
 
 #[test]

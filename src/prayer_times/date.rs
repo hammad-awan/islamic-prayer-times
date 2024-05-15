@@ -24,15 +24,15 @@ impl DateRange {
         self.0.end()
     }
 
-    // Returns the number of days in the `DateRange`.
+    /// Returns the number of days in the `DateRange`.
     pub fn num_days(&self) -> usize {
         let duration = *self.end_date() - *self.start_date();
         (duration.num_days() + 1) as usize
     }
 
-    // Partitions the date range into `Vec` of `count` date ranges.
+    /// Partitions the date range into a [`Vec`] of count date ranges.
     pub fn partition(&self, count: usize) -> Vec<DateRange> {
-        if count == 1 {
+        if count < 2 {
             vec![self.clone()]
         } else {
             let days = self.num_days();

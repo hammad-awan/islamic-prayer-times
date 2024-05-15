@@ -7,12 +7,19 @@ use crate::error::OutOfRangeError;
 /// Hijri day of the week.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HijriDay {
+    /// Sunday
     Ahad = 1,
+    /// Monday
     Ithnain,
+    /// Tuesday
     Thulatha,
+    /// Wednesday
     Arbiaa,
+    /// Thursday
     Khamees,
-    Jumaa,
+    /// Friday
+    Jumaah,
+    /// Saturday
     Sabt,
 }
 
@@ -34,7 +41,7 @@ impl TryFrom<u8> for HijriDay {
             3 => Ok(Thulatha),
             4 => Ok(Arbiaa),
             5 => Ok(Khamees),
-            6 => Ok(Jumaa),
+            6 => Ok(Jumaah),
             7 => Ok(Sabt),
             _ => Err(OutOfRangeError(1..=7)),
         }
@@ -44,17 +51,29 @@ impl TryFrom<u8> for HijriDay {
 /// Hijri month of the year.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HijriMonth {
+    /// First month of the year
     Muharram = 1,
+    /// Second month of the year
     Safar,
+    /// Third month of the year
     RabiaAwal,
+    /// Fourth month of the year
     RabiaThani,
+    /// Fifth month of the year
     JumadaAwal,
+    /// Sixth month of the year
     JumadaThani,
+    /// Seventh month of the year
     Rajab,
+    /// Eighth month of the year
     Shaaban,
+    /// Ninth month of the year
     Ramadan,
+    /// Tenth month of the year
     Shawwal,
+    /// Eleventh month of the year
     DhulQiddah,
+    /// Twelfth month of the year
     DhulHijjah,
 }
 
@@ -115,7 +134,7 @@ pub struct HijriDate {
 impl HijriDate {
     const HIJRI_EPOCH: i32 = 227015;
 
-    /// Returns the ISO 8601 calendar date without timezone.
+    /// Returns the ISO 8601 calendar date without timezone for the Hijri date.
     pub fn date(&self) -> NaiveDate {
         self.date
     }
@@ -130,7 +149,7 @@ impl HijriDate {
         HijriDay::try_from(self.weekday).unwrap()
     }
 
-    /// Hijri month of the year.
+    /// Returns the Hijri month of the year.
     pub fn month(&self) -> HijriMonth {
         HijriMonth::try_from(self.month).unwrap()
     }
@@ -145,12 +164,27 @@ impl HijriDate {
         self.pre_epoch
     }
 
+    // Calculates and returns the absolute Gregorian date for the date.
     fn greg_abs_date(date: NaiveDate) -> i32 {
         let y_1 = (date.year() - 1) as f64;
         (date.ordinal() as f64 + 365. * y_1 + (y_1 / 4.).floor() - (y_1 / 100.).floor()
             + (y_1 / 400.).floor()) as i32
     }
 
+    // Calculates and returns the absolute Hijri date for the day, month, and year.
+    fn hijri_abs_date(day: u8, month: u8, year: i32) -> i32 {
+        let day: f64 = day as f64;
+        let month: f64 = month as f64;
+        let year: f64 = year as f64;
+        (day + 29. * (month - 1.)
+            + (month / 2.).floor()
+            + 354. * (year - 1.)
+            + ((3. + 11. * year) / 30.).floor()
+            + Self::HIJRI_EPOCH as f64
+            - 1.) as i32
+    }
+
+    // Calculates and returns the Hijri year for the absolute Gregorian date.
     fn hijri_year(greg_date: i32) -> i32 {
         let mut year: i32;
         if greg_date < Self::HIJRI_EPOCH {
@@ -168,18 +202,7 @@ impl HijriDate {
         year
     }
 
-    fn hijri_abs_date(day: u8, month: u8, year: i32) -> i32 {
-        let day: f64 = day as f64;
-        let month: f64 = month as f64;
-        let year: f64 = year as f64;
-        (day + 29. * (month - 1.)
-            + (month / 2.).floor()
-            + 354. * (year - 1.)
-            + ((3. + 11. * year) / 30.).floor()
-            + Self::HIJRI_EPOCH as f64
-            - 1.) as i32
-    }
-
+    // Calculates and returns the Hirji month value for the absolute Gregorian date and year.
     fn month_val(greg_date: i32, year: i32) -> u8 {
         let mut month = 1;
         while greg_date > Self::hijri_abs_date(Self::days_in_month(month, year), month, year) {
@@ -189,6 +212,7 @@ impl HijriDate {
         month
     }
 
+    // Calculates and returns the number of days for the Hijri month and year.
     fn days_in_month(month: u8, year: i32) -> u8 {
         if month % 2 != 1 && (month != 12 || !Self::is_hijri_leap_year(year)) {
             29
@@ -197,10 +221,12 @@ impl HijriDate {
         }
     }
 
+    // Calculates and returns true if the year is a Hijri leap year, false otherwise.
     fn is_hijri_leap_year(year: i32) -> bool {
         ((11 * year).abs() + 14) % 30 < 11
     }
 
+    // Adjusts the Hijri year value for pre-epoch and returns the adjusted year and whether it is pre-epoch.
     fn adj_pre_epoch(mut year: i32) -> (u32, bool) {
         let mut pre_epoch = false;
         if year <= 0 {

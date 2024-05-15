@@ -644,14 +644,11 @@ impl TopAstroDay {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::geo::{coordinates::*, julian_day::*};
+    use crate::test_utils::EPSILON_TEST;
     use chrono::NaiveDate;
     use float_cmp::assert_approx_eq;
-
-    use crate::geo::{coordinates::*, julian_day::*};
-
-    use super::*;
-
-    const EPSILON_TEST: f64 = 0.00000001;
 
     #[test]
     fn should_new_astro() {
