@@ -31,7 +31,7 @@ fn main() {
     let pts_by_date = prayer_times_dt_rng_block(
         &params_config.params,
         params_config.location,
-        &params_config.date_range,
+        &params_config.date_range.unwrap(),
         365,
     );
 
@@ -52,12 +52,17 @@ fn read_params_file(input_file_path: &str) -> ParamsConfig {
         )
     });
 
-    let params_config: ParamsConfig = serde_json::from_str(&file_data).unwrap_or_else(|_| {
+    let mut params_config: ParamsConfig = serde_json::from_str(&file_data).unwrap_or_else(|_| {
         panic!(
             "Failed to deserialize the geographical and calculation parameters as JSON from the file {}",
             &input_file_path
         )
     });
+
+    if params_config.date_range.is_none() {
+        let today = Local::now().date_naive();
+        params_config.date_range = Some(DateRange::from(today..=today));
+    }
 
     params_config
 }
@@ -95,7 +100,7 @@ fn read_params_cli(cli_args: &CliArgs) -> ParamsConfig {
     ParamsConfig {
         params,
         location,
-        date_range: DateRange::from(start_date..=end_date),
+        date_range: Some(DateRange::from(start_date..=end_date)),
     }
 }
 

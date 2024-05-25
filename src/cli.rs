@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 pub struct ParamsConfig {
     pub params: Params,
     pub location: Location,
-    pub date_range: DateRange,
+    pub date_range: Option<DateRange>,
 }
 
 #[derive(Debug, Parser)]
